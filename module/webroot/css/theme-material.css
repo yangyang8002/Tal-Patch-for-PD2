@@ -1,0 +1,176 @@
+/*
+ * TAL-Patch WebUI · Material You 风格主题
+ * 参照 Material 3：surface 色阶、12-16px 圆角、M3 规格开关、#6750A4 种子色
+ *
+ * @author Kevin233 (https://github.com/Kevin233B)
+ * @author yangyang8002 (https://github.com/yangyang8002)
+ */
+
+html[data-theme="material"] {
+  --bg: #fef7ff;               /* surface */
+  --card-bg: #f3edf7;          /* surface-container-low */
+  --text: #1d1b20;             /* on-surface */
+  --divider: rgba(0, 0, 0, .08);
+  --accent: #6750a4;           /* primary */
+  --accent-press: #5a4494;
+  --on-accent: #ffffff;
+  --input-bg: #eaddf5;         /* surface-container */
+  --input-border: #cac4d0;     /* outline */
+  --seg-bg: #e8def8;           /* secondary-container */
+  --seg-active-bg: #6750a4;
+  --seg-active-text: #ffffff;
+  --danger: #b3261e;
+  --switch-off-track: #e6e0e9;
+  --switch-off-border: #79747e;
+  --switch-off-thumb: #79747e;
+  --dialog-mask: rgba(0, 0, 0, .4);
+  --toast-bg: #322f35;         /* inverse-surface */
+  --toast-text: #f5eff7;       /* inverse-on-surface */
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-theme="material"] {
+    --bg: #141218;
+    --card-bg: #1d1b20;
+    --text: #e6e0e9;
+    --divider: rgba(255, 255, 255, .08);
+    --accent: #d0bcff;
+    --accent-press: #b69df8;
+    --on-accent: #381e72;
+    --input-bg: #2b2930;
+    --input-border: #938f99;
+    --seg-bg: #36343b;
+    --seg-active-bg: #d0bcff;
+    --seg-active-text: #381e72;
+    --danger: #f2b8b5;
+    --switch-off-track: #36343b;
+    --switch-off-border: #938f99;
+    --switch-off-thumb: #938f99;
+    --toast-bg: #e6e0e9;
+    --toast-text: #322f35;
+  }
+}
+
+html[data-theme="material"] body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* M3 顶栏：中等标题、居中感 */
+html[data-theme="material"] .page-title {
+  font-size: 1.6rem;
+}
+
+html[data-theme="material"] .segmented {
+  background: var(--seg-bg);
+}
+
+html[data-theme="material"] .seg-btn {
+  color: var(--text);
+  opacity: .75;
+}
+
+html[data-theme="material"] .seg-btn.active {
+  background: var(--seg-active-bg);
+  color: var(--seg-active-text);
+  opacity: 1;
+}
+
+html[data-theme="material"] .section-title {
+  color: var(--accent);
+  text-transform: none;
+}
+
+html[data-theme="material"] .card {
+  background: var(--card-bg);
+  border-radius: 16px;
+  box-shadow: none;
+}
+
+html[data-theme="material"] .row + .row {
+  border-top-color: var(--divider);
+}
+
+html[data-theme="material"] .row-desc a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* M3 规格开关：52x32 轨道 + 描边，on 态 thumb 放大 */
+html[data-theme="material"] .switch {
+  width: 52px;
+  height: 32px;
+  border-radius: 999px;
+  background: var(--switch-off-track);
+  border: 2px solid var(--switch-off-border);
+}
+
+html[data-theme="material"] .switch .thumb {
+  top: 7px;
+  left: 6px;
+  width: 16px;
+  height: 16px;
+  background: var(--switch-off-thumb);
+}
+
+html[data-theme="material"] .switch.on {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+html[data-theme="material"] .switch.on .thumb {
+  top: 4px;
+  left: 4px;
+  width: 22px;
+  height: 22px;
+  background: var(--on-accent);
+  transform: translateX(22px);
+}
+
+html[data-theme="material"] .input {
+  background: var(--input-bg);
+  border-color: var(--input-border);
+  color: var(--text);
+  border-radius: 12px 12px 4px 4px; /* M3 文本框顶部圆角 */
+  border-bottom-width: 2px;
+}
+
+html[data-theme="material"] .input:focus {
+  border-color: var(--accent);
+  box-shadow: none;
+}
+
+/* M3 Filled tonal 按钮 */
+html[data-theme="material"] .btn {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+html[data-theme="material"] .btn:hover {
+  background: var(--accent-press);
+}
+
+html[data-theme="material"] .btn-danger {
+  background: var(--danger);
+}
+
+html[data-theme="material"] .dialog-mask {
+  background: var(--dialog-mask);
+}
+
+html[data-theme="material"] .dialog {
+  background: var(--card-bg);
+  color: var(--text);
+  border-radius: 28px 28px 0 0; /* M3 bottom sheet 大圆角 */
+}
+
+html[data-theme="material"] .log-box {
+  background: var(--input-bg);
+  color: var(--text);
+}
+
+html[data-theme="material"] .toast {
+  background: var(--toast-bg);
+  color: var(--toast-text);
+  border-radius: 8px; /* M3 snackbar 小圆角 */
+}

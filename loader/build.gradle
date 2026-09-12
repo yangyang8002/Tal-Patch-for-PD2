@@ -1,0 +1,29 @@
+// TAL-Patch Hook 逻辑库 → 编译为 classes.jar，再由 build.py 用 d8 打成 loader.dex
+// 注意：类名/方法名被 native 层以字符串引用，禁止混淆。
+plugins {
+    id "com.android.library"
+}
+
+android {
+    namespace "com.kevin233.talpad.hook"
+    compileSdk 34
+
+    defaultConfig {
+        minSdk 26
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+}
+
+// 仅依赖 Android 框架（org.json 由系统提供），无第三方库。
+dependencies {
+}

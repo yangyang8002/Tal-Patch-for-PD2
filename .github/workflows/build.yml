@@ -1,0 +1,52 @@
+name: Build TAL-Patch (Zygisk)
+
+on:
+  push:
+    branches: [ master, zygisk-webui ]
+    tags: [ 'v*' ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install NDK & CMake
+        run: |
+          sdkmanager --install "ndk;26.1.10909125" "cmake;3.22.1"
+          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/26.1.10909125" >> "$GITHUB_ENV"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build loader (Java → classes.jar)
+        run: ./gradlew :loader:assembleRelease
+
+      - name: Build zygisk native (libtalpatch.so)
+        run: ./gradlew :zygisk:assembleRelease
+
+      - name: Package module zip
+        run: python3 build.py
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tal-patch-zygisk
+          path: dist/*.zip
+
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.zip

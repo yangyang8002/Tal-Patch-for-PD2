@@ -1,0 +1,5 @@
+# TAL-Patch 默认不需要额外 SELinux 规则：
+# 配置在 specialize 的 root 窗口期读取，热更新走 /sdcard 镜像。
+# 如遇个别 ROM 限制注入进程读取 /sdcard/TAL-Patch/config.json，可尝试放开：
+# allow untrusted_app sdcardfs file read
+# allow system_server sdcardfs file read

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="miuix">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>TAL-Patch</title>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/theme-miuix.css">
+  <link rel="stylesheet" href="css/theme-material.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <h1 class="page-title">TAL-Patch</h1>
+      <p class="page-subtitle">学而思学习机解封补丁 · <span id="versionText">v3.0.0</span></p>
+      <p class="page-status" id="statusText">正在连接 KernelSU…</p>
+      <div class="segmented" id="themeGroup" role="tablist" aria-label="界面风格">
+        <button class="seg-btn active" data-value="miuix">MIUIX 风格</button>
+        <button class="seg-btn" data-value="material">Material 风格</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" id="configContainer"><!-- 配置卡片由 app.js 渲染 --></main>
+
+  <section class="container">
+    <div class="section-title">维护</div>
+    <div class="card">
+      <div class="row">
+        <div class="row-text">
+          <div class="row-title">发送测试通知</div>
+          <div class="row-desc">验证「恢复通知消息内容」是否生效</div>
+        </div>
+        <button class="btn" id="btnTestNotify">发送</button>
+      </div>
+      <div class="row">
+        <div class="row-text">
+          <div class="row-title">强停学习机应用</div>
+          <div class="row-desc">修改配置后强停目标应用使其立即重新注入</div>
+        </div>
+        <button class="btn" id="btnForceStopTal">强停</button>
+      </div>
+      <div class="row">
+        <div class="row-text">
+          <div class="row-title">重启 SystemUI</div>
+          <div class="row-desc">通知恢复异常时可尝试</div>
+        </div>
+        <button class="btn" id="btnRestartSystemUI">重启</button>
+      </div>
+      <div class="row">
+        <div class="row-text">
+          <div class="row-title">查看模块日志</div>
+          <div class="row-desc">/sdcard/TAL-Patch-Log/tal_patch.log</div>
+        </div>
+        <button class="btn" id="btnViewLog">查看</button>
+      </div>
+      <div class="row">
+        <div class="row-text">
+          <div class="row-title">清空日志</div>
+          <div class="row-desc">删除全部模块日志文件</div>
+        </div>
+        <button class="btn btn-danger" id="btnClearLog">清空</button>
+      </div>
+    </div>
+
+    <div class="section-title">关于</div>
+    <div class="card">
+      <div class="row">
+        <div class="row-text">
+          <div class="row-title">TAL-Patch (Zygisk + WebUI)</div>
+          <div class="row-desc">解除安装限制 · 恢复通知 · 自定义学习/使用时长 · 屏蔽环境检测</div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="row-text">
+          <div class="row-title">作者</div>
+          <div class="row-desc">
+            <a href="https://github.com/Kevin233B" target="_blank" rel="noopener">Kevin233</a>
+            &amp;
+            <a href="https://github.com/yangyang8002" target="_blank" rel="noopener">yangyang8002</a>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="row-text">
+          <div class="row-title">开源协议</div>
+          <div class="row-desc">CC BY-NC-SA 4.0（禁止商业使用）</div>
+        </div>
+      </div>
+    </div>
+    <footer class="footer">TAL-Patch · Zygisk 注入 · KernelSU WebUI</footer>
+  </section>
+
+  <div class="dialog-mask" id="logDialog">
+    <div class="dialog">
+      <div class="dialog-title">模块日志</div>
+      <pre class="log-box" id="logBox">(读取中…)</pre>
+      <div class="dialog-actions">
+        <button class="btn" id="btnCloseLog">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="js/ksu.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

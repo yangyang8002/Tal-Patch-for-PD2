@@ -1,0 +1,16 @@
+{
+  "unlock_install": true,
+  "block_usercenter_detect": true,
+  "restore_notification": true,
+  "block_default_wallpaper": false,
+  "block_default_launcher": false,
+  "custom_usage_enabled": false,
+  "custom_study_minutes": "120",
+  "study_once_per_day": true,
+  "custom_app_usage": "",
+  "block_study_report": true,
+  "block_minor_control": true,
+  "block_root_logs": true,
+  "scope_extra": "",
+  "ui_theme": "miuix"
+}

@@ -1,0 +1,277 @@
+/*
+ * TAL-Patch WebUI 基础布局（结构与交互，颜色由 theme-*.css 提供）
+ *
+ * @author Kevin233 (https://github.com/Kevin233B)
+ * @author yangyang8002 (https://github.com/yangyang8002)
+ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  font-size: 15px;
+}
+
+body {
+  font-family: system-ui, -apple-system, "MiSans", "PingFang SC",
+    "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+  min-height: 100vh;
+  transition: background-color .25s ease, color .25s ease;
+}
+
+/* ---------- 顶栏 ---------- */
+.topbar {
+  padding: calc(env(safe-area-inset-top, 0px) + 20px) 20px 12px;
+}
+
+.topbar-inner {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.page-title {
+  font-size: 1.9rem;
+  font-weight: 700;
+  letter-spacing: .2px;
+}
+
+.page-subtitle {
+  margin-top: 2px;
+  font-size: .85rem;
+  opacity: .65;
+}
+
+.page-status {
+  margin-top: 6px;
+  font-size: .78rem;
+  opacity: .55;
+}
+
+/* ---------- 分段选择器（主题切换） ---------- */
+.segmented {
+  display: flex;
+  margin-top: 14px;
+  border-radius: 999px;
+  padding: 3px;
+  width: fit-content;
+  gap: 2px;
+}
+
+.seg-btn {
+  border: none;
+  background: transparent;
+  font-size: .82rem;
+  padding: 6px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .2s ease;
+}
+
+/* ---------- 内容 ---------- */
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.section-title {
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .4px;
+  margin: 20px 8px 8px;
+  opacity: .6;
+}
+
+.card {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+/* ---------- 配置行 ---------- */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.row + .row {
+  border-top-width: 1px;
+  border-top-style: solid;
+}
+
+.row-column {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.row-column .row-text {
+  width: 100%;
+}
+
+.row-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.row-title {
+  font-size: .95rem;
+  font-weight: 500;
+}
+
+.row-desc {
+  margin-top: 3px;
+  font-size: .76rem;
+  line-height: 1.45;
+  opacity: .6;
+}
+
+.row-desc a {
+  color: inherit;
+  font-weight: 600;
+}
+
+/* ---------- 输入 ---------- */
+.input {
+  width: 100%;
+  margin-top: 10px;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: .88rem;
+  font-family: inherit;
+  outline: none;
+  border-width: 1px;
+  border-style: solid;
+  resize: vertical;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+textarea.input {
+  font-family: ui-monospace, "JetBrains Mono", monospace;
+  line-height: 1.5;
+}
+
+/* ---------- 开关（几何基础，细节在各主题） ---------- */
+.switch {
+  position: relative;
+  flex-shrink: 0;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: background-color .2s ease, border-color .2s ease;
+}
+
+.switch .thumb {
+  position: absolute;
+  border-radius: 50%;
+  transition: transform .2s ease, background-color .2s ease,
+    width .2s ease, height .2s ease, top .2s ease, left .2s ease;
+}
+
+/* ---------- 按钮 ---------- */
+.btn {
+  border: none;
+  border-radius: 999px;
+  padding: 8px 18px;
+  font-size: .82rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: filter .15s ease, transform .1s ease;
+}
+
+.btn:active {
+  transform: scale(.96);
+}
+
+/* ---------- 日志对话框 ---------- */
+.dialog-mask {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s ease;
+  z-index: 100;
+}
+
+.dialog-mask.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.dialog {
+  width: 100%;
+  max-width: 720px;
+  max-height: 76vh;
+  border-radius: 20px 20px 0 0;
+  padding: 18px 16px calc(env(safe-area-inset-bottom, 0px) + 16px);
+  display: flex;
+  flex-direction: column;
+  transform: translateY(24px);
+  transition: transform .25s ease;
+}
+
+.dialog-mask.show .dialog {
+  transform: translateY(0);
+}
+
+.dialog-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.log-box {
+  flex: 1;
+  overflow: auto;
+  border-radius: 10px;
+  padding: 10px;
+  font-size: .72rem;
+  font-family: ui-monospace, "JetBrains Mono", monospace;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-all;
+  min-height: 30vh;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+/* ---------- Toast ---------- */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 28px);
+  transform: translateX(-50%) translateY(8px);
+  border-radius: 999px;
+  padding: 9px 20px;
+  font-size: .8rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s ease, transform .2s ease;
+  z-index: 200;
+  max-width: 86vw;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.footer {
+  text-align: center;
+  font-size: .72rem;
+  opacity: .4;
+  margin: 28px 0 calc(env(safe-area-inset-bottom, 0px) + 24px);
+}

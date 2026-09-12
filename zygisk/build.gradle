@@ -1,0 +1,35 @@
+// Zygisk native 模块 → libtalpatch.so（随模块 zip 安装到 zygisk/ 目录）
+plugins {
+    id "com.android.library"
+}
+
+android {
+    namespace "com.kevin233.talpad.zygisk"
+    compileSdk 34
+
+    defaultConfig {
+        minSdk 26
+        ndk {
+            abiFilters "arm64-v8a" // 学习机均为 arm64；如需 32 位可加 "armeabi-v7a"
+        }
+        externalNativeBuild {
+            cmake {
+                targets "talpatch"
+                arguments "-DANDROID_STL=c++_static"
+            }
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path file("CMakeLists.txt")
+            version "3.22.1"
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+}

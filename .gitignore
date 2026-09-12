@@ -6,4 +6,8 @@ build/
 captures/
 .externalNativeBuild/
 .cxx/
-app/build/
+loader/build/
+zygisk/build/
+dist/
+__pycache__/
+*.pyc

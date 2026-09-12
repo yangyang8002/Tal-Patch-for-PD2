@@ -1,0 +1,156 @@
+/*
+ * TAL-Patch WebUI · MIUIX 风格主题
+ * 参照 MIUI / HyperOS 设置界面：大圆角卡片、分组标题、细轨道开关、#3482FF 强调色
+ *
+ * @author Kevin233 (https://github.com/Kevin233B)
+ * @author yangyang8002 (https://github.com/yangyang8002)
+ */
+
+html[data-theme="miuix"] {
+  --bg: #f5f5f5;
+  --card-bg: #ffffff;
+  --text: #1a1a1a;
+  --divider: rgba(0, 0, 0, .06);
+  --accent: #3482ff;
+  --accent-press: #2b6fd6;
+  --input-bg: #f5f5f5;
+  --input-border: transparent;
+  --seg-bg: rgba(0, 0, 0, .06);
+  --seg-active-bg: #ffffff;
+  --danger: #ff3b30;
+  --switch-off: #e5e5ea;
+  --dialog-mask: rgba(0, 0, 0, .35);
+  --toast-bg: rgba(30, 30, 30, .92);
+  --toast-text: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-theme="miuix"] {
+    --bg: #101010;
+    --card-bg: #1c1c1e;
+    --text: #f2f2f7;
+    --divider: rgba(255, 255, 255, .07);
+    --input-bg: #2c2c2e;
+    --seg-bg: rgba(255, 255, 255, .08);
+    --seg-active-bg: #3a3a3c;
+    --switch-off: #3a3a3c;
+    --danger: #ff453a;
+  }
+}
+
+html[data-theme="miuix"] body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+html[data-theme="miuix"] .page-title {
+  /* MIUI 设置的大标题风格 */
+  font-size: 2rem;
+}
+
+html[data-theme="miuix"] .segmented {
+  background: var(--seg-bg);
+}
+
+html[data-theme="miuix"] .seg-btn {
+  color: var(--text);
+  opacity: .7;
+}
+
+html[data-theme="miuix"] .seg-btn.active {
+  background: var(--seg-active-bg);
+  opacity: 1;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .12);
+}
+
+html[data-theme="miuix"] .section-title {
+  color: var(--text);
+}
+
+html[data-theme="miuix"] .card {
+  background: var(--card-bg);
+  border-radius: 18px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .04);
+}
+
+html[data-theme="miuix"] .row + .row {
+  border-top-color: var(--divider);
+}
+
+html[data-theme="miuix"] .row-title {
+  color: var(--text);
+}
+
+html[data-theme="miuix"] .row-desc a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* MIUI 风格开关：细胶囊轨道 + 大圆 thumb */
+html[data-theme="miuix"] .switch {
+  width: 46px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--switch-off);
+}
+
+html[data-theme="miuix"] .switch .thumb {
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  background: #ffffff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, .18);
+}
+
+html[data-theme="miuix"] .switch.on {
+  background: var(--accent);
+}
+
+html[data-theme="miuix"] .switch.on .thumb {
+  transform: translateX(18px);
+}
+
+html[data-theme="miuix"] .input {
+  background: var(--input-bg);
+  border-color: var(--input-border);
+  color: var(--text);
+  border-radius: 12px;
+}
+
+html[data-theme="miuix"] .input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(52, 130, 255, .15);
+}
+
+html[data-theme="miuix"] .btn {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+html[data-theme="miuix"] .btn:hover {
+  background: var(--accent-press);
+}
+
+html[data-theme="miuix"] .btn-danger {
+  background: var(--danger);
+}
+
+html[data-theme="miuix"] .dialog-mask {
+  background: var(--dialog-mask);
+}
+
+html[data-theme="miuix"] .dialog {
+  background: var(--card-bg);
+  color: var(--text);
+}
+
+html[data-theme="miuix"] .log-box {
+  background: var(--input-bg);
+  color: var(--text);
+}
+
+html[data-theme="miuix"] .toast {
+  background: var(--toast-bg);
+  color: var(--toast-text);
+}
