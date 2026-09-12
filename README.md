@@ -71,10 +71,15 @@ python build.py                     # CMake 构建 libtalpatch.so + d8 打 dex +
 
 ## 安装与使用
 
-1. 设备已刷入 **KernelSU** 并启用 **Zygisk**（或使用 ZygiskNext / ReZygisk）；
+1. 设备已刷入 **KernelSU** 并启用 **Zygisk**（推荐 **ZygiskNext**，实测 1.5.0 可用，
+   应用进程与 system_server 均正常注入）；
 2. KernelSU 管理器 → 模块 → 刷入 `tal_patch-v3.0.0.zip` → 重启；
 3. KernelSU 管理器 → 模块 → TAL-Patch → **WebUI** 进行配置（右上角可切换 MIUIX / Material 主题）；
 4. 配置保存后数秒内热更新生效；涉及「附加作用域」等注入目标的变更需强停目标应用或重启。
+
+> 真机验证：TALIH-PD2（学而思 XPad，Android 13，KernelSU 35071 + ZygiskNext 1.5.0），
+> 应用进程（studyservice/znxxservice/systemui/shell）与 system_server（PMS 安装白名单等）
+> 全部 hook 生效。
 
 ## 致谢与署名
 

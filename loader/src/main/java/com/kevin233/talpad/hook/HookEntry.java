@@ -85,9 +85,6 @@ public final class HookEntry {
     private void onInjected(String process) {
         log(Log.INFO, TAG, "TAL-Patch (zygisk) injected in " + process);
         SdcardLog.append("HookEntry", "injected in " + process);
-        // 调试标记（权威证据，验证后可删）
-        StateStore.write("injected_" + process.replaceAll("[^a-zA-Z0-9_]", "_"),
-                String.valueOf(System.currentTimeMillis()));
         if (!NativeBridge.nativeReady()) {
             log(Log.ERROR, TAG, "native bridge not ready, abort hooks");
             SdcardLog.append("HookEntry", "native bridge not ready");
