@@ -35,7 +35,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Build loader (Java → classes.jar)
-        run: ./gradlew :loader:assembleRelease
+        run: sh ./gradlew :loader:assembleRelease
 
       - name: Build native (CMake) & package module zip
         run: python3 build.py
