@@ -97,3 +97,7 @@ target_compile_options(talpatch PRIVATE -fvisibility=hidden -fno-rtti)
 target_link_options(talpatch PRIVATE -Wl,--exclude-libs,ALL)
 
 target_link_libraries(talpatch PRIVATE lsplant_static dobby log)
+
+# 发布裁剪符号（9MB -> ~1MB）
+add_custom_command(TARGET talpatch POST_BUILD
+        COMMAND ${CMAKE_STRIP} --strip-all $<TARGET_FILE:talpatch>)
