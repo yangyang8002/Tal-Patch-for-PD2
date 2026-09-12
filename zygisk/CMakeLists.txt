@@ -18,15 +18,24 @@ find_package(Git REQUIRED)
 set(DEPS_DIR "${CMAKE_BINARY_DIR}/_deps")
 file(MAKE_DIRECTORY "${DEPS_DIR}")
 
-# 浅克隆辅助：deps_clone(<dir> <repo> <tag>)，已存在则跳过
-function(deps_clone dir repo tag)
+# 浅克隆辅助：deps_clone(<dir> <repo> <ref>)，支持分支/tag/commit sha，已存在则跳过
+function(deps_clone dir repo ref)
     if (NOT EXISTS "${DEPS_DIR}/${dir}/.git")
-        message(STATUS "cloning ${repo} (${tag})")
-        execute_process(
-                COMMAND ${GIT_EXECUTABLE} clone --depth 1 --branch ${tag} ${repo} "${DEPS_DIR}/${dir}"
+        message(STATUS "cloning ${repo} (${ref})")
+        execute_process(COMMAND ${GIT_EXECUTABLE} init "${DEPS_DIR}/${dir}"
                 RESULT_VARIABLE r)
+        if (r EQUAL 0)
+            execute_process(COMMAND ${GIT_EXECUTABLE} fetch --depth 1 ${repo} ${ref}
+                    WORKING_DIRECTORY "${DEPS_DIR}/${dir}" RESULT_VARIABLE r)
+        endif ()
+        if (r EQUAL 0)
+            execute_process(COMMAND ${GIT_EXECUTABLE} checkout --detach FETCH_HEAD
+                    WORKING_DIRECTORY "${DEPS_DIR}/${dir}"
+                    RESULT_VARIABLE r OUTPUT_QUIET ERROR_QUIET)
+        endif ()
         if (NOT r EQUAL 0)
-            message(FATAL_ERROR "clone failed: ${repo}")
+            file(REMOVE_RECURSE "${DEPS_DIR}/${dir}")
+            message(FATAL_ERROR "clone failed: ${repo} @ ${ref}")
         endif ()
     endif ()
 endfunction()
@@ -38,8 +47,8 @@ if (NOT EXISTS "${ZYGISK_API_DIR}/zygisk.hpp")
     message(FATAL_ERROR "zygisk.hpp not found: ${ZYGISK_API_DIR}")
 endif ()
 
-# ---- Dobby（无子模块） ----
-deps_clone(dobby-src https://github.com/jmpews/Dobby.git master)
+# ---- Dobby（使用 LSPosed 维护的修复分支，master 原版在新 NDK 下无法编译） ----
+deps_clone(dobby-src https://github.com/LSPosed/Dobby.git 6813ca76ddeafcaece525bf8c6cde7ff4c21d3ce)
 set(DOBBY_DEBUG OFF CACHE BOOL "" FORCE)
 
 # Dobby 的 arm64 汇编在 Apple 分支误用了 Mach-O 的 @PAGE/@PAGEOFF 写法，
