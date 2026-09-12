@@ -38,20 +38,14 @@ namespace {
 constexpr const char *kModuleDir = "/data/adb/modules/tal_patch";
 constexpr const char *kLoaderDex = "/data/adb/modules/tal_patch/loader.dex";
 
-// 调试标记：在 root 权限窗口期向模块目录写文件，用于验证注入路径
-//（logcat 早期日志易丢失，文件标记是权威证据）。验证后可删。
-static void write_debug_marker(const char *name) {
-    char path[256];
-    snprintf(path, sizeof(path),
-             "/data/adb/modules/tal_patch/debug/%s.marker", name);
-    mkdir("/data/adb/modules/tal_patch/debug", 0755);
-    int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    if (fd >= 0) {
-        char buf[64];
-        int n = snprintf(buf, sizeof(buf), "%ld\n", (long) time(nullptr));
-        write(fd, buf, n);
-        close(fd);
-    }
+// 调试标记：经 root companion 进程写文件（zygote 上下文受 sepolicy 限制无法
+// 直接写 /data/adb）。验证后可删。
+static void write_debug_marker(zygisk::Api *api, const char *name) {
+    if (api == nullptr) return;
+    int fd = api->connectCompanion();
+    if (fd < 0) return;
+    write(fd, name, strlen(name));
+    close(fd);
 }
 
 class TalPatchModule : public zygisk::ModuleBase {
@@ -69,7 +63,7 @@ public:
         const char *nice = env_->GetStringUTFChars(args->nice_name, nullptr);
         config_ = talpatch::load_module_config();
         if (talpatch::is_target_process(nice, config_)) {
-            write_debug_marker((std::string("app_") + nice).c_str());
+            write_debug_marker(api_, (std::string("app_") + nice).c_str());
             target_process_ = nice;
             dex_ = talpatch::read_file(kLoaderDex);
             LOGI("target app process: %s (dex %zu bytes)", nice, dex_.size());
@@ -93,7 +87,7 @@ public:
         config_ = talpatch::load_module_config();
         dex_ = talpatch::read_file(kLoaderDex);
         inject_server_ = !dex_.empty();
-        write_debug_marker("system_server_pre");
+        write_debug_marker(api_, "system_server_pre");
         LOGI("system_server specialize, dex %zu bytes", dex_.size());
         if (!inject_server_) {
             api_->setOption(zygisk::Option::DLCLOSE_MODULE_LIBRARY);
@@ -122,4 +116,30 @@ private:
 } // namespace
 
 REGISTER_ZYGISK_MODULE(TalPatchModule)
-// 无 companion 进程需求，不注册 REGISTER_ZYGISK_COMPANION
+
+// root companion：接收进程名并写调试标记文件
+static void companion_handler(int client) {
+    char name[128] = {0};
+    ssize_t n = read(client, name, sizeof(name) - 1);
+    close(client);
+    if (n <= 0) return;
+    name[n] = 0;
+    for (char *c = name; *c; ++c) {
+        if (!((*c >= 'a' && *c <= 'z') || (*c >= 'A' && *c <= 'Z') ||
+              (*c >= '0' && *c <= '9') || *c == '_' || *c == '.')) {
+            *c = '_';
+        }
+    }
+    mkdir("/data/adb/modules/tal_patch/debug", 0755);
+    char path[256];
+    snprintf(path, sizeof(path),
+             "/data/adb/modules/tal_patch/debug/%s.marker", name);
+    int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (fd >= 0) {
+        char buf[64];
+        int len = snprintf(buf, sizeof(buf), "%ld\n", (long) time(nullptr));
+        write(fd, buf, len);
+        close(fd);
+    }
+}
+REGISTER_ZYGISK_COMPANION(companion_handler)
