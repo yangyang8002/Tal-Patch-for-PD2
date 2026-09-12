@@ -13,7 +13,10 @@
  * @author yangyang8002 (https://github.com/yangyang8002)
  */
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <time.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #include "zygisk.hpp"
 
@@ -35,6 +38,23 @@ namespace {
 constexpr const char *kModuleDir = "/data/adb/modules/tal_patch";
 constexpr const char *kLoaderDex = "/data/adb/modules/tal_patch/loader.dex";
 
+// 调试标记：在 root 权限窗口期向模块目录写文件，用于验证注入路径
+//（logcat 早期日志易丢失，文件标记是权威证据）。验证后可删。
+static void write_debug_marker(const char *name) {
+    char path[256];
+    snprintf(path, sizeof(path),
+             "/data/adb/modules/tal_patch/debug/%s.marker", name);
+    mkdir("/data/adb/modules/tal_patch/debug", 0755);
+    int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (fd >= 0) {
+        char buf[64];
+        int n = snprintf(buf, sizeof(buf), "%ld
+", (long) time(nullptr));
+        write(fd, buf, n);
+        close(fd);
+    }
+}
+
 class TalPatchModule : public zygisk::ModuleBase {
 public:
     void onLoad(Api *api, JNIEnv *env) override {
@@ -50,6 +70,7 @@ public:
         const char *nice = env_->GetStringUTFChars(args->nice_name, nullptr);
         config_ = talpatch::load_module_config();
         if (talpatch::is_target_process(nice, config_)) {
+            write_debug_marker((std::string("app_") + nice).c_str());
             target_process_ = nice;
             dex_ = talpatch::read_file(kLoaderDex);
             LOGI("target app process: %s (dex %zu bytes)", nice, dex_.size());
@@ -73,6 +94,7 @@ public:
         config_ = talpatch::load_module_config();
         dex_ = talpatch::read_file(kLoaderDex);
         inject_server_ = !dex_.empty();
+        write_debug_marker("system_server_pre");
         LOGI("system_server specialize, dex %zu bytes", dex_.size());
         if (!inject_server_) {
             api_->setOption(zygisk::Option::DLCLOSE_MODULE_LIBRARY);
