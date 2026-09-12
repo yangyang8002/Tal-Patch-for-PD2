@@ -41,6 +41,20 @@ endif ()
 # ---- Dobby（无子模块） ----
 deps_clone(dobby-src https://github.com/jmpews/Dobby.git master)
 set(DOBBY_DEBUG OFF CACHE BOOL "" FORCE)
+
+# Dobby 的 arm64 汇编在 Apple 分支误用了 Mach-O 的 @PAGE/@PAGEOFF 写法，
+# ELF(Android) 下 LLVM IAS 拒绝汇编（invalid symbol kind for ADRP relocation）。
+# 这里在配置期将其改写为 ELF 标准写法（adrp + :lo12:），可重复执行。
+set(DOBBY_CLOSURE_ASM
+        "${DEPS_DIR}/dobby-src/source/TrampolineBridge/ClosureTrampolineBridge/arm64/closure_bridge_arm64.asm")
+if (EXISTS "${DOBBY_CLOSURE_ASM}")
+    file(READ "${DOBBY_CLOSURE_ASM}" asm_src)
+    string(REPLACE "adrp TMP_REG_0, cdecl(common_closure_bridge_handler)@PAGE"
+            "adrp TMP_REG_0, cdecl(common_closure_bridge_handler)" asm_src "${asm_src}")
+    string(REPLACE "add TMP_REG_0, TMP_REG_0, cdecl(common_closure_bridge_handler)@PAGEOFF"
+            "add TMP_REG_0, TMP_REG_0, :lo12:cdecl(common_closure_bridge_handler)" asm_src "${asm_src}")
+    file(WRITE "${DOBBY_CLOSURE_ASM}" "${asm_src}")
+endif ()
 add_subdirectory("${DEPS_DIR}/dobby-src" "${CMAKE_BINARY_DIR}/dobby-build")
 
 # ---- LSPlant v6.4（仅拉取 dex_builder 子模块，递归含 parallel-hashmap；
