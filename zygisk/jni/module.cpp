@@ -12,6 +12,9 @@
  * @author Kevin233 (https://github.com/Kevin233B)
  * @author yangyang8002 (https://github.com/yangyang8002)
  */
+#include <sys/types.h>
+#include <unistd.h>
+
 #include "zygisk.hpp"
 
 #include <cstring>
