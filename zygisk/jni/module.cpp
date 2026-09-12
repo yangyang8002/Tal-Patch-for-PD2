@@ -48,8 +48,7 @@ static void write_debug_marker(const char *name) {
     int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (fd >= 0) {
         char buf[64];
-        int n = snprintf(buf, sizeof(buf), "%ld
-", (long) time(nullptr));
+        int n = snprintf(buf, sizeof(buf), "%ld\n", (long) time(nullptr));
         write(fd, buf, n);
         close(fd);
     }
