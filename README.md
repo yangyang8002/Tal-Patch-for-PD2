@@ -59,10 +59,12 @@
 ## 构建
 
 ```bash
-# 依赖：JDK 17、Android SDK 34、NDK r26+、CMake 3.22.1（首次构建自动拉取 LSPlant/Dobby/Zygisk API）
+# 依赖：JDK 17、Android SDK 34、NDK r26+、CMake 3.28~3.31（DexBuilder 要求 ≥3.28，
+# Dobby 与 CMake 4.x 不兼容；可 pip install "cmake==3.31.*" ninja）
+# 首次构建自动拉取 LSPlant v6.4 / Dobby / Zygisk API 头文件
 ./gradlew :loader:assembleRelease   # Java → classes.jar
-./gradlew :zygisk:assembleRelease   # CMake → zygisk/arm64-v8a 的 libtalpatch.so
-python build.py                     # → dist/tal_patch-v3.0.0.zip
+python build.py                     # CMake 构建 libtalpatch.so + d8 打 dex + 打包
+                                    # → dist/tal_patch-v3.0.0.zip（--skip-native 可跳过 native 构建）
 ```
 
 也可以直接推送 tag，由 GitHub Actions 构建并发布。

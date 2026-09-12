@@ -14,4 +14,3 @@ dependencyResolutionManagement {
 }
 rootProject.name = "TAL-Patch"
 include ":loader"   // Java hook 逻辑 → loader.dex
-include ":zygisk"   // Zygisk native 注入器 → libtalpatch.so

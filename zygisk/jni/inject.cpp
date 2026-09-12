@@ -7,7 +7,7 @@
 namespace talpatch {
 
 // bridge.cpp 提供：向已加载的 NativeBridge 类注册 JNI natives 并完成 LSPlant 初始化
-bool register_native_bridge(JNIEnv *env, jclass bridge_class);
+bool register_native_bridge(JNIEnv *env, jclass bridge_class, jobject class_loader);
 
 static jclass find_class(JNIEnv *env, jobject class_loader, const char *name) {
     // Class.forName(name, false, classLoader)
@@ -93,7 +93,7 @@ bool inject_loader(JNIEnv *env, const char *process_name,
         LOGE("inject: NativeBridge class not found");
         return false;
     }
-    if (!register_native_bridge(env, bridge)) {
+    if (!register_native_bridge(env, bridge, loader)) {
         LOGE("inject: register NativeBridge natives failed");
         return false;
     }

@@ -9,6 +9,7 @@
 #include <cctype>
 #include <cstdio>
 #include <cstring>
+#include <dlfcn.h>
 #include <mutex>
 #include <set>
 
@@ -91,16 +92,23 @@ void install_native_hooks() {
     static bool installed = false;
     if (installed) return;
     installed = true;
-    if (DobbyHook((void *) &fopen, (dobby_dummy_func_t) &fake_fopen,
-                  (dobby_dummy_func_t *) &orig_fopen) != 0) {
+    void *sym_fopen = dlsym(RTLD_DEFAULT, "fopen");
+    void *sym_fgets = dlsym(RTLD_DEFAULT, "fgets");
+    void *sym_fclose = dlsym(RTLD_DEFAULT, "fclose");
+    if (!sym_fopen || !sym_fgets || !sym_fclose) {
+        LOGE("resolve libc symbols failed");
+        return;
+    }
+    if (DobbyHook(sym_fopen, (void *) &fake_fopen,
+                  (void **) &orig_fopen) != 0) {
         LOGW("hook fopen failed");
     }
-    if (DobbyHook((void *) &fgets, (dobby_dummy_func_t) &fake_fgets,
-                  (dobby_dummy_func_t *) &orig_fgets) != 0) {
+    if (DobbyHook(sym_fgets, (void *) &fake_fgets,
+                  (void **) &orig_fgets) != 0) {
         LOGW("hook fgets failed");
     }
-    if (DobbyHook((void *) &fclose, (dobby_dummy_func_t) &fake_fclose,
-                  (dobby_dummy_func_t *) &orig_fclose) != 0) {
+    if (DobbyHook(sym_fclose, (void *) &fake_fclose,
+                  (void **) &orig_fclose) != 0) {
         LOGW("hook fclose failed");
     }
     LOGI("native anti-detect hooks installed");

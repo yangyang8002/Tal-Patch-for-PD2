@@ -12,7 +12,7 @@
  * @author Kevin233 (https://github.com/Kevin233B)
  * @author yangyang8002 (https://github.com/yangyang8002)
  */
-#include "api.hpp"
+#include "zygisk.hpp"
 
 #include <cstring>
 #include <string>

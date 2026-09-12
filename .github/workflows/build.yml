@@ -22,10 +22,14 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install NDK & CMake
+      - name: Install NDK
         run: |
-          sdkmanager --install "ndk;26.1.10909125" "cmake;3.22.1"
+          sdkmanager --install "ndk;26.1.10909125"
           echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/26.1.10909125" >> "$GITHUB_ENV"
+
+      # DexBuilder 需要 CMake >= 3.28，Dobby 与 CMake 4.x 不兼容
+      - name: Install CMake 3.31 & Ninja
+        run: pip install "cmake==3.31.*" ninja
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -33,10 +37,7 @@ jobs:
       - name: Build loader (Java → classes.jar)
         run: ./gradlew :loader:assembleRelease
 
-      - name: Build zygisk native (libtalpatch.so)
-        run: ./gradlew :zygisk:assembleRelease
-
-      - name: Package module zip
+      - name: Build native (CMake) & package module zip
         run: python3 build.py
 
       - name: Upload artifact

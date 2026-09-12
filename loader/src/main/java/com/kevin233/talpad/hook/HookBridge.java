@@ -103,9 +103,11 @@ public final class HookBridge {
         }
         long id = sNextId.getAndIncrement();
         Entry entry = new Entry(id, target, hooker);
+        boolean isStatic =
+                java.lang.reflect.Modifier.isStatic(((Method) target).getModifiers());
         Method backup;
         try {
-            backup = NativeBridge.nativeHook(id, (Method) target);
+            backup = NativeBridge.nativeHook(id, (Method) target, isStatic);
         } catch (Throwable t) {
             Log.w(TAG, "nativeHook failed for " + target, t);
             return false;

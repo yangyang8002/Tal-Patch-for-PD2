@@ -18,13 +18,15 @@ public final class NativeBridge {
     /**
      * Hook 指定方法。
      *
-     * @param hookId HookBridge 分配的 id，trampoline 回调时回传
-     * @param target 目标方法
+     * @param hookId   HookBridge 分配的 id，存入 HookerStub 供回调定位
+     * @param target   目标方法
+     * @param isStatic 目标方法是否为 static（LSPlant 回调的 args 布局不同）
      * @return 原方法备份（可反射调用），失败返回 null
      */
-    public static native Method nativeHook(long hookId, Method target);
+    public static native Method nativeHook(long hookId, Method target,
+                                           boolean isStatic);
 
-    /** 反优化指定方法（尽力而为）。 */
+    /** 反优化指定方法（消除内联导致的 Hook 失效，尽力而为）。 */
     public static native void nativeDeoptimize(Member target);
 
     /**
@@ -32,22 +34,4 @@ public final class NativeBridge {
      * 注入早期调用，失败则 Java 侧不再安装任何 Hook。
      */
     public static native boolean nativeReady();
-
-    /**
-     * LSPlant 回调入口（签名与 LSPlant v6 Hook 的 callback 约定一致）：
-     * 目标方法被调用时，由 LSPlant 转入本方法。
-     *
-     * @param hooker   Hook 时 native 传入的上下文对象（Long 型的 hookId）
-     * @param original 原方法（未使用，备份由 HookBridge 登记）
-     * @param thiz     调用者实例（静态方法为 null）
-     * @param args     调用参数
-     */
-    @SuppressWarnings("unused") // invoked by LSPlant trampoline
-    public static Object lsplantCallback(Object hooker,
-                                         java.lang.reflect.Method original,
-                                         Object thiz, Object[] args)
-            throws Throwable {
-        long hookId = hooker instanceof Long ? (Long) hooker : -1L;
-        return HookBridge.dispatch(hookId, thiz, args);
-    }
 }
