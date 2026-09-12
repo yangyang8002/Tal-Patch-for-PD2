@@ -99,16 +99,16 @@ void install_native_hooks() {
         LOGE("resolve libc symbols failed");
         return;
     }
-    if (DobbyHook(sym_fopen, (void *) &fake_fopen,
-                  (void **) &orig_fopen) != 0) {
+    if (DobbyHook(sym_fopen, (dobby_dummy_func_t) &fake_fopen,
+                  (dobby_dummy_func_t *) &orig_fopen) != 0) {
         LOGW("hook fopen failed");
     }
-    if (DobbyHook(sym_fgets, (void *) &fake_fgets,
-                  (void **) &orig_fgets) != 0) {
+    if (DobbyHook(sym_fgets, (dobby_dummy_func_t) &fake_fgets,
+                  (dobby_dummy_func_t *) &orig_fgets) != 0) {
         LOGW("hook fgets failed");
     }
-    if (DobbyHook(sym_fclose, (void *) &fake_fclose,
-                  (void **) &orig_fclose) != 0) {
+    if (DobbyHook(sym_fclose, (dobby_dummy_func_t) &fake_fclose,
+                  (dobby_dummy_func_t *) &orig_fclose) != 0) {
         LOGW("hook fclose failed");
     }
     LOGI("native anti-detect hooks installed");

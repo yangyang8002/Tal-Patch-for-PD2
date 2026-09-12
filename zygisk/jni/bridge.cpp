@@ -38,11 +38,11 @@ static bool init_lsplant(JNIEnv *env) {
     if (g_ready) return true;
     lsplant::InitInfo info{
             .inline_hooker = [](void *target, void *hooker) -> void * {
-                void *backup = nullptr;
-                if (DobbyHook(target, hooker, &backup) != 0) {
+                dobby_dummy_func_t backup = nullptr;
+                if (DobbyHook(target, (dobby_dummy_func_t) hooker, &backup) != 0) {
                     return nullptr;
                 }
-                return backup;
+                return (void *) backup;
             },
             .inline_unhooker = [](void *target) -> bool {
                 return DobbyDestroy(target) == 0;
