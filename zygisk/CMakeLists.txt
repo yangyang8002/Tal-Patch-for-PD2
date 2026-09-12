@@ -50,6 +50,7 @@ endif ()
 # ---- Dobby（使用 LSPosed 维护的修复分支，master 原版在新 NDK 下无法编译） ----
 deps_clone(dobby-src https://github.com/LSPosed/Dobby.git 6813ca76ddeafcaece525bf8c6cde7ff4c21d3ce)
 set(DOBBY_DEBUG OFF CACHE BOOL "" FORCE)
+set(DOBBY_GENERATE_SHARED OFF CACHE BOOL "" FORCE)
 
 # Dobby 的 arm64 汇编在 Apple 分支误用了 Mach-O 的 @PAGE/@PAGEOFF 写法，
 # ELF(Android) 下 LLVM IAS 拒绝汇编（invalid symbol kind for ADRP relocation）。
@@ -95,4 +96,4 @@ set_target_properties(talpatch PROPERTIES CXX_SCAN_FOR_MODULES OFF)
 target_compile_options(talpatch PRIVATE -fvisibility=hidden -fno-rtti)
 target_link_options(talpatch PRIVATE -Wl,--exclude-libs,ALL)
 
-target_link_libraries(talpatch PRIVATE lsplant_static dobby_static log)
+target_link_libraries(talpatch PRIVATE lsplant_static dobby log)
