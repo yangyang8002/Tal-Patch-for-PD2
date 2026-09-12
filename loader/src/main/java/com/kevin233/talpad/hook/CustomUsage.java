@@ -99,7 +99,7 @@ public final class CustomUsage {
                 name = line.substring(0, fullColon).trim();
                 number = line.substring(fullColon + 1).trim();
             } else {
-                String[] parts = line.split("\s+");
+                String[] parts = line.split("\\s+");
                 if (parts.length < 2) {
                     continue;
                 }
