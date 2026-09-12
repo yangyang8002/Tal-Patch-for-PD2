@@ -88,7 +88,10 @@ add_library(talpatch SHARED
         jni/bridge.cpp
         jni/native_hooks.cpp)
 
-target_include_directories(talpatch PRIVATE "${ZYGISK_API_DIR}")
+target_include_directories(talpatch PRIVATE
+        "${ZYGISK_API_DIR}"
+        "${DEPS_DIR}/dobby-src/include")
+set_target_properties(talpatch PROPERTIES CXX_SCAN_FOR_MODULES OFF)
 target_compile_options(talpatch PRIVATE -fvisibility=hidden -fno-rtti)
 target_link_options(talpatch PRIVATE -Wl,--exclude-libs,ALL)
 
