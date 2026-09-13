@@ -140,8 +140,29 @@ public final class PkgInfo {
         if (ai.icon == 0) return null;
         try {
             Context appCtx = sSysCtx.createPackageContext(ai.packageName, 0);
-            Drawable d = appCtx.getResources().getDrawable(
-                    ai.icon, appCtx.getTheme());
+            Resources res = appCtx.getResources();
+            // 裸进程无显示设备，densityDpi=0 时资源选择器只匹配
+            // nodpi/anydpi 资源，密度桶里的图标全部 NotFoundException。
+            // 补上显式 xxhdpi 指标后再取 drawable。
+            DisplayMetrics dm = new DisplayMetrics();
+            dm.setTo(res.getDisplayMetrics());
+            if (dm.densityDpi <= 0) {
+                dm.densityDpi = 480;
+                dm.density = 3.0f;
+                dm.scaledDensity = 3.0f;
+                dm.xdpi = 480;
+                dm.ydpi = 480;
+                if (dm.widthPixels <= 0) {
+                    dm.widthPixels = 1080;
+                    dm.heightPixels = 1920;
+                }
+            }
+            Configuration cfg = new Configuration(res.getConfiguration());
+            if (cfg.densityDpi <= 0) {
+                cfg.densityDpi = 480;
+            }
+            res.updateConfiguration(cfg, dm);
+            Drawable d = res.getDrawable(ai.icon, appCtx.getTheme());
             if (d != null) return d;
         } catch (Throwable t) {
             if (sIconErrLog++ < 2) {
