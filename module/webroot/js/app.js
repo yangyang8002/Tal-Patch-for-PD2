@@ -38,19 +38,19 @@
 
   // 配置项 schema：type: switch | text | textarea
   var SCHEMA = [
-    { section: '安装与检测' },
+    { section: '安装与检测', page: 'install' },
     { key: 'unlock_install', type: 'switch', title: '解除学习机系统安装限制',
       desc: '放行任意应用安装：绕过安装白名单、未知来源与 V 型设备限制' },
     { key: 'block_usercenter_detect', type: 'switch', title: '阻止用户中心检测环境并上报日志',
       desc: '屏蔽用户中心的 root / 框架 / 模拟器 / 调试等环境检测与设备上报' },
-    { section: '系统行为' },
+    { section: '系统行为', page: 'system' },
     { key: 'restore_notification', type: 'switch', title: '恢复通知消息内容',
       desc: '还原被隐藏的通知标题、正文、进度条和操作按钮' },
     { key: 'block_default_wallpaper', type: 'switch', title: '阻止系统恢复默认壁纸',
       desc: '防止系统在定制或开机时把壁纸重置成默认' },
     { key: 'block_default_launcher', type: 'switch', title: '阻止系统恢复默认桌面',
       desc: '防止回桌面时把默认桌面改回 TAL 自带桌面' },
-    { section: '学习与应用统计' },
+    { section: '学习与应用统计', page: 'stats' },
     { key: 'custom_usage_enabled', type: 'switch', title: '自定义学习时长与应用使用',
       desc: '开启后，按下面填写的时长代替真实统计' },
     { key: 'custom_study_minutes', type: 'text', title: '每日学习时长（分钟）',
@@ -66,7 +66,7 @@
       desc: '所有应用均允许启动，不再下发或执行禁止使用指令' },
     { key: 'block_root_logs', type: 'switch', title: '限制上传 Root 痕迹日志',
       desc: '让 backdoor 上报的日志看起来像未 Root 的正常设备' },
-    { section: '高级' },
+    { section: '高级', page: 'advanced' },
     { key: 'scope_extra', type: 'text', title: '附加作用域',
       desc: '附加注入的应用包名，逗号分隔（这些应用只恢复通知，需重启目标应用）',
       hint: '例如：com.tencent.mm, com.microsoft.emmx' }
@@ -101,15 +101,22 @@
     var container = $('configContainer');
     container.innerHTML = '';
     var card = null;
+    var page = null;
+    var pages = {};
     SCHEMA.forEach(function (item) {
       if (item.section) {
+        page = document.createElement('div');
+        page.className = 'tab-page';
+        page.setAttribute('data-page', item.page);
         var h = document.createElement('div');
         h.className = 'section-title';
         h.textContent = item.section;
-        container.appendChild(h);
+        page.appendChild(h);
         card = document.createElement('div');
         card.className = 'card';
-        container.appendChild(card);
+        page.appendChild(card);
+        container.appendChild(page);
+        pages[item.page] = page;
         return;
       }
       if (!card) return;
@@ -157,6 +164,36 @@
       }
       card.appendChild(row);
     });
+    applyTab(currentTab(), false);
+  }
+
+  // ---------------- Tab 分组栏 ----------------
+  function currentTab() {
+    return localStorage.getItem('tal_patch_tab') || 'install';
+  }
+
+  function applyTab(pageId, persist) {
+    var pages = document.querySelectorAll('.tab-page');
+    var found = false;
+    for (var i = 0; i < pages.length; i++) {
+      var match = pages[i].getAttribute('data-page') === pageId;
+      pages[i].classList.toggle('active', match);
+      if (match) found = true;
+    }
+    if (!found && pages.length) {
+      pageId = 'install';
+      for (var j = 0; j < pages.length; j++) {
+        pages[j].classList.toggle('active',
+          pages[j].getAttribute('data-page') === pageId);
+      }
+    }
+    var tabs = document.querySelectorAll('#tabBar .tab');
+    for (var k = 0; k < tabs.length; k++) {
+      tabs[k].classList.toggle('active',
+        tabs[k].getAttribute('data-page') === pageId);
+    }
+    if (persist) localStorage.setItem('tal_patch_tab', pageId);
+    window.scrollTo(0, 0);
   }
 
   // ---------------- 读写 ----------------
@@ -273,32 +310,75 @@
       return out;
     }
 
+    var PKGINFO_OUT = '/data/adb/modules/tal_patch/cache/apps.json';
+    var PKGINFO_CMD = 'rm -f ' + PKGINFO_OUT +
+      '; app_process -Djava.class.path=/data/adb/modules/tal_patch/loader.dex' +
+      ' /system/bin com.kevin233.talpad.tools.PkgInfo ' + PKGINFO_OUT;
+
+    // 优先用 loader.dex 内置的 PkgInfo 工具导出 图标+应用名，失败回退 pm 纯包名
     async function scanApps() {
-      $('appListInfo').textContent = '正在扫描…';
+      $('appListInfo').textContent = '正在扫描（首次导出图标较慢）…';
       $('btnScanApps').disabled = true;
+      var ok = false;
       try {
-        var rUser = await ksuBridge.exec('pm list packages -3');
-        var rSys = await ksuBridge.exec('pm list packages -s');
-        var userPkgs = parsePackageLines(rUser.stdout);
-        var sysPkgs = parsePackageLines(rSys.stdout);
-        var seen = {};
-        appList = [];
-        userPkgs.forEach(function (p) { if (!seen[p]) { seen[p] = 1; appList.push({ pkg: p, system: false }); } });
-        sysPkgs.forEach(function (p) { if (!seen[p]) { seen[p] = 1; appList.push({ pkg: p, system: true }); } });
-        appList.sort(function (a, b) { return a.pkg < b.pkg ? -1 : 1; });
-        // 记录基线（用于"重启变更作用域"）
+        var r = await ksuBridge.exec(PKGINFO_CMD, 60000);
+        if (r.errno === 0) {
+          var raw = await ksuBridge.readFile(PKGINFO_OUT);
+          var arr = JSON.parse(raw);
+          appList = arr.map(function (o) {
+            return { pkg: o.pkg, label: o.label || o.pkg,
+                     icon: o.icon || null, system: !!o.system };
+          });
+          ok = appList.length > 0;
+        }
+      } catch (e) {
+        ok = false;
+      }
+      if (!ok) {
+        try {
+          var rUser = await ksuBridge.exec('pm list packages -3');
+          var rSys = await ksuBridge.exec('pm list packages -s');
+          var seen = {};
+          appList = [];
+          parsePackageLines(rUser.stdout).forEach(function (p) {
+            if (!seen[p]) { seen[p] = 1; appList.push({ pkg: p, label: p, icon: null, system: false }); }
+          });
+          parsePackageLines(rSys.stdout).forEach(function (p) {
+            if (!seen[p]) { seen[p] = 1; appList.push({ pkg: p, label: p, icon: null, system: true }); }
+          });
+          appList.sort(function (a, b) { return a.pkg < b.pkg ? -1 : 1; });
+          ok = appList.length > 0;
+          if (ok) ksuBridge.toast('图标导出失败，已回退为纯包名列表');
+        } catch (e2) {
+          ok = false;
+        }
+      }
+      if (ok) {
         origEffective = {};
         appList.forEach(function (app) { origEffective[app.pkg] = isNotifyOn(app.pkg); });
         recomputeChanged();
         renderAppList();
         updateScopeBar();
+        var nu = 0;
+        appList.forEach(function (a) { if (!a.system) nu++; });
         $('appListInfo').textContent =
-          '共 ' + appList.length + ' 个应用（用户 ' + userPkgs.length + ' / 系统 ' + sysPkgs.length + '）';
-        ksuBridge.toast('扫描完成：' + appList.length + ' 个应用');
-      } catch (e) {
-        $('appListInfo').textContent = '扫描失败：' + e.message;
-      } finally {
-        $('btnScanApps').disabled = false;
+          '共 ' + appList.length + ' 个应用（用户 ' + nu + ' / 系统 ' + (appList.length - nu) + '）';
+      } else {
+        $('appListInfo').textContent = '扫描失败';
+      }
+      $('btnScanApps').disabled = false;
+    }
+
+    var filterMode = 'all';
+
+    function passFilter(app) {
+      switch (filterMode) {
+        case 'user': return !app.system;
+        case 'system': return app.system;
+        case 'on': return isNotifyOn(app.pkg);
+        case 'off': return !isNotifyOn(app.pkg);
+        case 'changed': return changedApps[app.pkg] !== undefined;
+        default: return true;
       }
     }
 
@@ -311,20 +391,34 @@
       var frag = document.createDocumentFragment();
       for (var i = 0; i < appList.length && shown < MAX_LIST_ROWS; i++) {
         var app = appList[i];
-        if (q && app.pkg.toLowerCase().indexOf(q) < 0) continue;
+        if (!passFilter(app)) continue;
+        if (q && app.pkg.toLowerCase().indexOf(q) < 0 &&
+            (app.label || '').toLowerCase().indexOf(q) < 0) continue;
         shown++;
         var row = document.createElement('div');
         row.className = 'row app-row';
+        if (app.icon) {
+          var img = document.createElement('img');
+          img.className = 'app-ico';
+          img.src = app.icon;
+          img.loading = 'lazy';
+          img.alt = '';
+          row.appendChild(img);
+        }
         var textWrap = document.createElement('div');
         textWrap.className = 'row-text';
         var title = document.createElement('div');
-        title.className = 'row-title app-pkg';
-        title.textContent = app.pkg;
-        textWrap.appendChild(title);
+        title.className = 'row-title';
+        title.textContent = app.label || app.pkg;
         var badge = document.createElement('span');
         badge.className = 'badge' + (app.system ? ' badge-sys' : '');
         badge.textContent = app.system ? '系统' : '用户';
-        textWrap.appendChild(badge);
+        title.appendChild(badge);
+        textWrap.appendChild(title);
+        var sub = document.createElement('div');
+        sub.className = 'row-desc app-pkg';
+        sub.textContent = app.pkg;
+        textWrap.appendChild(sub);
         row.appendChild(textWrap);
         var sw = document.createElement('button');
         sw.className = 'switch';
@@ -433,6 +527,19 @@
       };
       $('btnScanApps').onclick = scanApps;
       $('appSearchInput').oninput = renderAppList;
+      $('appFilterChips').addEventListener('click', function (e) {
+        var chip = e.target.closest('.chip');
+        if (!chip) return;
+        filterMode = chip.getAttribute('data-filter');
+        var chips = document.querySelectorAll('#appFilterChips .chip');
+        for (var i = 0; i < chips.length; i++) chips[i].classList.remove('active');
+        chip.classList.add('active');
+        renderAppList();
+      });
+      $('tabBar').addEventListener('click', function (e) {
+        var tab = e.target.closest('.tab');
+        if (tab) applyTab(tab.getAttribute('data-page'), true);
+      });
       $('btnRestartChanged').onclick = restartChangedApps;
       $('btnDismissScopeBar').onclick = function () {
         changedApps = {};
@@ -447,6 +554,7 @@
   // ---------------- 启动 ----------------
   document.addEventListener('DOMContentLoaded', function () {
     bindActions();
+    applyTab(currentTab(), false);
     loadConfig();
     ksuBridge.readFile('/data/adb/modules/tal_patch/module.prop').then(function (raw) {
       var m = raw.match(/^version=(.*)$/m);

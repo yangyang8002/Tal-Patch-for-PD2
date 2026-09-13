@@ -13,6 +13,7 @@ html[data-theme="miuix"] {
   --divider: rgba(0, 0, 0, .06);
   --accent: #3482ff;
   --accent-press: #2b6fd6;
+  --on-accent: #ffffff;
   --input-bg: #f5f5f5;
   --input-border: transparent;
   --seg-bg: rgba(0, 0, 0, .06);

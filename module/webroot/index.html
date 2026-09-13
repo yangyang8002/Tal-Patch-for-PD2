@@ -22,9 +22,19 @@
     </div>
   </header>
 
+  <nav class="tabs" id="tabBar" aria-label="功能分组">
+    <button class="tab active" data-page="install">安装检测</button>
+    <button class="tab" data-page="system">系统行为</button>
+    <button class="tab" data-page="stats">学习统计</button>
+    <button class="tab" data-page="notify">消息通知</button>
+    <button class="tab" data-page="advanced">高级</button>
+    <button class="tab" data-page="maintain">维护</button>
+    <button class="tab" data-page="about">关于</button>
+  </nav>
+
   <main class="container" id="configContainer"><!-- 配置卡片由 app.js 渲染 --></main>
 
-  <section class="container">
+  <section class="container tab-page" data-page="notify">
     <div class="section-title">消息通知（应用粒度）</div>
     <div class="card">
       <div class="row">
@@ -40,8 +50,16 @@
           <div class="row-desc">扫描本机全部应用（用户应用 + 系统应用），可单独打开或关闭通知恢复；改动需重启对应应用后生效</div>
         </div>
         <div class="app-tools">
-          <input class="input" id="appSearchInput" placeholder="搜索包名…" inputmode="search">
+          <input class="input" id="appSearchInput" placeholder="搜索包名或应用名…" inputmode="search">
           <button class="btn" id="btnScanApps">扫描应用</button>
+        </div>
+        <div class="chips" id="appFilterChips">
+          <button class="chip active" data-filter="all">全部</button>
+          <button class="chip" data-filter="user">用户应用</button>
+          <button class="chip" data-filter="system">系统应用</button>
+          <button class="chip" data-filter="on">已开启</button>
+          <button class="chip" data-filter="off">已关闭</button>
+          <button class="chip" data-filter="changed">已变更</button>
         </div>
       </div>
       <div class="app-list-info" id="appListInfo">尚未扫描应用列表</div>
@@ -55,7 +73,7 @@
     <button class="btn btn-ghost" id="btnDismissScopeBar">忽略</button>
   </div>
 
-  <section class="container">
+  <section class="container tab-page" data-page="maintain">
     <div class="section-title">维护</div>
     <div class="card">
       <div class="row">
@@ -95,6 +113,9 @@
       </div>
     </div>
 
+  </section>
+
+  <section class="container tab-page" data-page="about">
     <div class="section-title">关于</div>
     <div class="card">
       <div class="row">

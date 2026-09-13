@@ -174,3 +174,14 @@ html[data-theme="material"] .toast {
   color: var(--toast-text);
   border-radius: 8px; /* M3 snackbar 小圆角 */
 }
+
+/* Material 风格 Tab：文字 + 底部指示条（区别于 MIUIX 的胶囊） */
+html[data-theme="material"] .tab {
+  border-radius: 0;
+  padding: 10px 12px;
+}
+html[data-theme="material"] .tab.active {
+  background: transparent;
+  color: var(--accent);
+  box-shadow: inset 0 -3px 0 var(--accent);
+}

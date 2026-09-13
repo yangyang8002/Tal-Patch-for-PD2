@@ -358,3 +358,98 @@ textarea.input {
 .btn-ghost:hover {
   background: rgba(128, 128, 128, .18);
 }
+
+/* ---- 顶部 Tab 分组栏 ---- */
+.tabs {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 10px 16px 8px;
+  background: var(--bg);
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+.tab {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font-size: .88rem;
+  opacity: .62;
+  cursor: pointer;
+  transition: background .2s, opacity .2s;
+}
+.tab.active {
+  background: var(--accent);
+  color: var(--on-accent, #fff);
+  opacity: 1;
+}
+.tab-page {
+  display: none;
+}
+.tab-page.active {
+  display: block;
+  animation: pageIn .22s ease;
+}
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- 筛选 chips ---- */
+.chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin-top: 10px;
+  scrollbar-width: none;
+}
+.chips::-webkit-scrollbar {
+  display: none;
+}
+.chip {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border: none;
+  border-radius: 999px;
+  background: var(--seg-bg);
+  color: inherit;
+  font-size: .8rem;
+  opacity: .75;
+  cursor: pointer;
+}
+.chip.active {
+  background: var(--accent);
+  color: var(--on-accent, #fff);
+  opacity: 1;
+}
+
+/* ---- 应用列表行（图标 + 双行文本） ---- */
+.app-row {
+  align-items: center;
+}
+.app-ico {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  margin-right: 12px;
+  background: var(--seg-bg);
+}
+.app-row .badge {
+  margin-top: 0;
+  margin-left: 8px;
+  vertical-align: 2px;
+}
+.row-desc.app-pkg {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: .74rem;
+  opacity: .55;
+}
