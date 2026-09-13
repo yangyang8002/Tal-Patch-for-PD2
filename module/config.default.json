@@ -12,5 +12,7 @@
   "block_minor_control": true,
   "block_root_logs": true,
   "scope_extra": "",
-  "ui_theme": "miuix"
+  "ui_theme": "miuix",
+  "notify_all_enabled": true,
+  "notify_app_overrides": {}
 }

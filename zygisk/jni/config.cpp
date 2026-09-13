@@ -84,14 +84,59 @@ static std::vector<std::string> parse_extra_scopes(const std::string &json) {
     return out;
 }
 
+// 极简解析 "key": true/false
+static bool parse_bool(const std::string &json, const char *name, bool def) {
+    std::string key = std::string("\"") + name + "\"";
+    size_t k = json.find(key);
+    if (k == std::string::npos) return def;
+    size_t colon = json.find(':', k + key.size());
+    if (colon == std::string::npos) return def;
+    size_t v = colon + 1;
+    while (v < json.size() && isspace((unsigned char) json[v])) v++;
+    if (json.compare(v, 4, "true") == 0) return true;
+    if (json.compare(v, 5, "false") == 0) return false;
+    return def;
+}
+
+// 提取 "key": {...} 的对象原文（值不是对象则返回空）
+static std::string extract_object(const std::string &json, const char *name) {
+    std::string key = std::string("\"") + name + "\"";
+    size_t k = json.find(key);
+    if (k == std::string::npos) return "";
+    size_t colon = json.find(':', k + key.size());
+    if (colon == std::string::npos) return "";
+    size_t b = colon + 1;
+    while (b < json.size() && isspace((unsigned char) json[b])) b++;
+    if (b >= json.size() || json[b] != '{') return "";
+    int depth = 0;
+    bool in_str = false;
+    for (size_t i = b; i < json.size(); ++i) {
+        char c = json[i];
+        if (in_str) {
+            if (c == '\\') { ++i; continue; }
+            if (c == '"') in_str = false;
+            continue;
+        }
+        if (c == '"') in_str = true;
+        else if (c == '{') depth++;
+        else if (c == '}' && --depth == 0) return json.substr(b, i - b + 1);
+    }
+    return "";
+}
+
 ModuleConfig load_module_config(const char *path) {
     ModuleConfig cfg;
     auto bytes = read_file(path);
     if (!bytes.empty()) {
         cfg.raw_json.assign(bytes.begin(), bytes.end());
         cfg.extra_scopes = parse_extra_scopes(cfg.raw_json);
-        LOGI("config loaded: %zu bytes, %zu extra scopes",
-             cfg.raw_json.size(), cfg.extra_scopes.size());
+        cfg.notify_all_enabled =
+                parse_bool(cfg.raw_json, "notify_all_enabled", true);
+        cfg.notify_app_overrides =
+                extract_object(cfg.raw_json, "notify_app_overrides");
+        LOGI("config loaded: %zu bytes, %zu extra scopes, notify_all=%d",
+             cfg.raw_json.size(), cfg.extra_scopes.size(),
+             cfg.notify_all_enabled ? 1 : 0);
     } else {
         LOGW("config missing, using defaults");
     }
@@ -114,6 +159,29 @@ bool is_target_process(const char *nice_name, const ModuleConfig &cfg) {
         if (name_matches(nice_name, entry.c_str())) return true;
     }
     return false;
+}
+
+bool notify_enabled_for(const char *nice_name, const ModuleConfig &cfg) {
+    if (!nice_name) return false;
+    std::string proc = nice_name;
+    size_t colon = proc.find(':');
+    std::string pkg = colon == std::string::npos ? proc : proc.substr(0, colon);
+    const std::string &ov = cfg.notify_app_overrides;
+    if (!ov.empty()) {
+        // 覆盖表为纯平铺 {"pkg":bool,...}，包名仅含 [a-z0-9_.]，直接子串匹配
+        std::string needle = "\"" + pkg + "\"";
+        size_t pos = ov.find(needle);
+        if (pos != std::string::npos) {
+            size_t c = ov.find(':', pos + needle.size());
+            if (c != std::string::npos) {
+                size_t v = c + 1;
+                while (v < ov.size() && isspace((unsigned char) ov[v])) v++;
+                if (ov.compare(v, 4, "true") == 0) return true;
+                if (ov.compare(v, 5, "false") == 0) return false;
+            }
+        }
+    }
+    return cfg.notify_all_enabled;
 }
 
 } // namespace talpatch

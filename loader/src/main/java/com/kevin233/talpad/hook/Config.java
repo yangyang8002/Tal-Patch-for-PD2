@@ -23,6 +23,10 @@ public final class Config {
     public static final String KEY_UI_COLOR_MODE = "ui_color_mode";
     public static final String KEY_UI_CUSTOM_COLOR = "ui_custom_color";
     /** 附加注入包名（逗号分隔），对应 WebUI 的「附加作用域」。 */
+    /** 全局默认：对所有应用恢复通知内容（应用粒度开关的默认值） */
+    public static final String KEY_NOTIFY_ALL_ENABLED = "notify_all_enabled";
+    /** 应用粒度通知覆盖表：JSON 字符串，如 {"com.xxx":false} */
+    public static final String KEY_NOTIFY_APP_OVERRIDES = "notify_app_overrides";
     public static final String KEY_SCOPE_EXTRA = "scope_extra";
     /** WebUI 主题：miuix / material（仅 WebUI 使用，Hook 侧不读）。 */
     public static final String KEY_UI_THEME = "ui_theme";
@@ -40,6 +44,8 @@ public final class Config {
     public static final boolean DEFAULT_BLOCK_MINOR_CONTROL = true;
     public static final String DEFAULT_UI_COLOR_MODE = "dynamic";
     public static final String DEFAULT_UI_CUSTOM_COLOR = "#6750A4";
+    public static final boolean DEFAULT_NOTIFY_ALL_ENABLED = true;
+    public static final String DEFAULT_NOTIFY_APP_OVERRIDES = "{}";
     public static final String DEFAULT_SCOPE_EXTRA = "";
     public static final String DEFAULT_UI_THEME = "miuix";
     private Config() {

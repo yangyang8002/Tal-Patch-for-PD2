@@ -49,10 +49,14 @@ public:
         }
         const char *nice = env_->GetStringUTFChars(args->nice_name, nullptr);
         config_ = talpatch::load_module_config();
-        if (talpatch::is_target_process(nice, config_)) {
+        bool target = talpatch::is_target_process(nice, config_);
+        // 非目标进程：若"应用消息通知"对该包生效，也注入（仅安装通知 hook）
+        bool notify = !target && talpatch::notify_enabled_for(nice, config_);
+        if (target || notify) {
             target_process_ = nice;
             dex_ = talpatch::read_file(kLoaderDex);
-            LOGI("target app process: %s (dex %zu bytes)", nice, dex_.size());
+            LOGI("%s app process: %s (dex %zu bytes)",
+                 target ? "target" : "notify-only", nice, dex_.size());
         } else {
             api_->setOption(zygisk::Option::DLCLOSE_MODULE_LIBRARY);
         }

@@ -25,6 +25,37 @@
   <main class="container" id="configContainer"><!-- 配置卡片由 app.js 渲染 --></main>
 
   <section class="container">
+    <div class="section-title">消息通知（应用粒度）</div>
+    <div class="card">
+      <div class="row">
+        <div class="row-text">
+          <div class="row-title">默认对所有应用恢复通知</div>
+          <div class="row-desc">未单独设置的应用按此默认值；关闭后仅下方单独开启的应用生效</div>
+        </div>
+        <button class="switch" id="notifyAllSwitch" role="switch" aria-checked="true"><span class="thumb"></span></button>
+      </div>
+      <div class="row row-column">
+        <div class="row-text">
+          <div class="row-title">应用列表</div>
+          <div class="row-desc">扫描本机全部应用（用户应用 + 系统应用），可单独打开或关闭通知恢复；改动需重启对应应用后生效</div>
+        </div>
+        <div class="app-tools">
+          <input class="input" id="appSearchInput" placeholder="搜索包名…" inputmode="search">
+          <button class="btn" id="btnScanApps">扫描应用</button>
+        </div>
+      </div>
+      <div class="app-list-info" id="appListInfo">尚未扫描应用列表</div>
+      <div class="app-list" id="appList"></div>
+    </div>
+  </section>
+
+  <div class="scope-bar" id="scopeBar">
+    <span class="scope-bar-text" id="scopeBarText">已变更 0 个应用</span>
+    <button class="btn" id="btnRestartChanged">重启变更应用</button>
+    <button class="btn btn-ghost" id="btnDismissScopeBar">忽略</button>
+  </div>
+
+  <section class="container">
     <div class="section-title">维护</div>
     <div class="card">
       <div class="row">

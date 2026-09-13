@@ -93,7 +93,7 @@ public final class HookEntry {
         if (isSystemServer(process)) {
             sSystemServerClassLoader = HookEntry.class.getClassLoader();
             log(Log.INFO, TAG, "system server injected, classloader ready");
-            installHooks();
+            installHooks("system_server");
             installInstallHooks(sSystemServerClassLoader);
             installGenieControlHooks(sSystemServerClassLoader);
             return;
@@ -103,10 +103,47 @@ public final class HookEntry {
             installPackageInstallerHooks(null);
             return;
         }
-        installHooks();
+        installHooks(pkg);
         if (TAL_APP_PACKAGES.contains(pkg)) {
             awaitAppClassLoader(pkg);
         }
+    }
+
+    /**
+     * 应用粒度消息通知开关：notify_app_overrides["pkg"] 覆盖
+     * notify_all_enabled 默认值；未配置则取全局默认。
+     */
+    private static boolean isNotifyEnabledForApp(String pkg) {
+        boolean def;
+        org.json.JSONObject root;
+        try {
+            root = ConfigBridge.json();
+        } catch (Throwable t) {
+            root = null;
+        }
+        def = root == null || root.optBoolean(
+                Config.KEY_NOTIFY_ALL_ENABLED,
+                Config.DEFAULT_NOTIFY_ALL_ENABLED);
+        if (pkg == null || pkg.isEmpty() || root == null) {
+            return def;
+        }
+        try {
+            org.json.JSONObject overrides =
+                    root.optJSONObject(Config.KEY_NOTIFY_APP_OVERRIDES);
+            if (overrides == null) {
+                // 兼容字符串形式（"{\"pkg\":false}"）
+                String raw = root.optString(
+                        Config.KEY_NOTIFY_APP_OVERRIDES, null);
+                if (raw != null && raw.startsWith("{")) {
+                    overrides = new org.json.JSONObject(raw);
+                }
+            }
+            if (overrides != null && overrides.has(pkg)) {
+                return overrides.optBoolean(pkg, def);
+            }
+        } catch (Throwable ignored) {
+        }
+        return def;
     }
 
     private static boolean isSystemServer(String process) {
@@ -475,7 +512,7 @@ public final class HookEntry {
             throw e;
         }
     }
-    private synchronized void installHooks() {
+    private synchronized void installHooks(String pkg) {
         if (hooksInstalled) {
             return;
         }
@@ -488,10 +525,11 @@ public final class HookEntry {
             log(Log.WARN, TAG, "read injected config failed", t);
         }
         Prefs prefs = ConfigBridge.get();
-        boolean restoreNotification = prefs == null
+        boolean restoreNotification = (prefs == null
                 || prefs.getBoolean(
                 Config.KEY_RESTORE_NOTIFICATION,
-                Config.DEFAULT_RESTORE_NOTIFICATION);
+                Config.DEFAULT_RESTORE_NOTIFICATION))
+                && isNotifyEnabledForApp(pkg);
         boolean blockWallpaper = prefs != null
                 && prefs.getBoolean(
                 Config.KEY_BLOCK_DEFAULT_WALLPAPER,
