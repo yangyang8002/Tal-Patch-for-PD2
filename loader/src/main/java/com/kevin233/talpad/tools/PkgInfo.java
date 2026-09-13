@@ -125,6 +125,8 @@ public final class PkgInfo {
      * 内部选资源失败会全部回退成系统默认图标。这里直接给目标 APK 建
      * AssetManager + 显式 xxhdpi 指标，绕过该问题。
      */
+    private static int sIconErrLog = 0;
+
     private static Drawable loadIconRaw(ApplicationInfo ai) {
         if (ai.icon == 0) return null;
         try {
@@ -149,6 +151,10 @@ public final class PkgInfo {
             Resources res = new Resources(am, dm, new Configuration());
             return res.getDrawable(ai.icon, null);
         } catch (Throwable t) {
+            if (sIconErrLog++ < 2) {
+                System.err.println("loadIconRaw failed for " + ai.packageName
+                        + ": " + t);
+            }
             return null;
         }
     }
