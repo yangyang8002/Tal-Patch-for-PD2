@@ -1,6 +1,10 @@
 package com.kevin233.talpad.tools;
 
 import android.content.Context;
+import android.content.res.AssetManager;
+import android.content.res.Configuration;
+import android.content.res.Resources;
+import android.util.DisplayMetrics;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -86,8 +90,12 @@ public final class PkgInfo {
             }
             o.put("label", label == null ? ai.packageName : label.toString());
             try {
-                Drawable d = pm.getApplicationIcon(ai);
-                o.put("icon", "data:image/png;base64," + iconToBase64(d));
+                Drawable d = loadIconRaw(ai);
+                if (d == null) {
+                    o.put("icon", JSONObject.NULL);
+                } else {
+                    o.put("icon", "data:image/png;base64," + iconToBase64(d));
+                }
             } catch (Throwable t) {
                 o.put("icon", JSONObject.NULL);
             }
@@ -109,6 +117,40 @@ public final class PkgInfo {
         Method getSystemContext = atClass.getDeclaredMethod("getSystemContext");
         getSystemContext.setAccessible(true);
         return (Context) getSystemContext.invoke(at);
+    }
+
+    /**
+     * 手动加载应用图标：app_process 裸进程里系统上下文的 DisplayMetrics
+     * 不完整（densityDpi 可能为 0），PackageManager.getApplicationIcon
+     * 内部选资源失败会全部回退成系统默认图标。这里直接给目标 APK 建
+     * AssetManager + 显式 xxhdpi 指标，绕过该问题。
+     */
+    private static Drawable loadIconRaw(ApplicationInfo ai) {
+        if (ai.icon == 0) return null;
+        try {
+            AssetManager am = AssetManager.class.newInstance();
+            Method add = AssetManager.class.getMethod(
+                    "addAssetPath", String.class);
+            add.setAccessible(true);
+            add.invoke(am, ai.sourceDir);
+            if (ai.splitSourceDirs != null) {
+                for (String sp : ai.splitSourceDirs) {
+                    add.invoke(am, sp);
+                }
+            }
+            DisplayMetrics dm = new DisplayMetrics();
+            dm.densityDpi = 480;
+            dm.density = 3.0f;
+            dm.scaledDensity = 3.0f;
+            dm.xdpi = 480;
+            dm.ydpi = 480;
+            dm.widthPixels = 1080;
+            dm.heightPixels = 1920;
+            Resources res = new Resources(am, dm, new Configuration());
+            return res.getDrawable(ai.icon, null);
+        } catch (Throwable t) {
+            return null;
+        }
     }
 
     private static String iconToBase64(Drawable d) throws Throwable {
