@@ -17,6 +17,8 @@
 | 禁用未成年人精细化管控 | 禁玩指令、应用管控失效，SLS/神策埋点屏蔽 | 开 |
 | 限制 Root 痕迹日志 | `SystemProperties`/`File`/`PackageManager` 过滤 su/magisk/ksu/zygisk 痕迹 | 开 |
 | native 防检测 | Dobby inline hook `fopen`/`fgets`，抹除 `/proc/*/maps` 中模块与 root 特征 | 开 |
+| 应用图标与检索 | 扫描时导出应用图标（位图直读 + 自适应/矢量图标合成）与应用名，支持搜索、筛选与开关状态标记 | — |
+| 检查 GitHub 更新 | WebUI「关于」页可检查最新 Release 并跳转下载，模块内配置 `updateJson` 支持 KernelSU 管理器内更新 | — |
 
 ## 与旧版（LSPosed）的区别
 
