@@ -443,6 +443,11 @@
           img.loading = 'lazy';
           img.alt = '';
           row.appendChild(img);
+        } else {
+          var ph = document.createElement('div');
+          ph.className = 'app-ico app-ico-ph';
+          ph.textContent = (app.label || app.pkg).charAt(0).toUpperCase();
+          row.appendChild(ph);
         }
         var textWrap = document.createElement('div');
         textWrap.className = 'row-text';

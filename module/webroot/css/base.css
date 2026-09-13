@@ -453,3 +453,14 @@ textarea.input {
   font-size: .74rem;
   opacity: .55;
 }
+
+.app-ico-ph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--on-accent, #fff);
+  background: var(--accent);
+  user-select: none;
+}
