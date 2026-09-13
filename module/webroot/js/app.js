@@ -298,6 +298,31 @@
       $('scopeBar').classList.toggle('show', n > 0);
     }
 
+    // 大文件分块读取：ksu.exec 回调经 evaluateJavascript 注入，
+    // 单次载荷过大（图标 JSON 约 2.4MB）在某些 WebUI 实现上会被截断/失败
+    async function readFileChunked(path, chunkSize) {
+      chunkSize = chunkSize || 262144;
+      var sizeR = await ksuBridge.exec(
+        'stat -c %s "' + path + '" 2>/dev/null || echo -1');
+      var total = parseInt((sizeR.stdout || '-1').trim(), 10);
+      if (isNaN(total) || total < 0) return '';
+      if (total === 0) return '';
+      if (total <= chunkSize) {
+        var r0 = await ksuBridge.exec('cat "' + path + '"');
+        return r0.errno === 0 ? r0.stdout : '';
+      }
+      var out = '';
+      var n = Math.ceil(total / chunkSize);
+      for (var i = 0; i < n; i++) {
+        var ri = await ksuBridge.exec(
+          'dd if="' + path + '" bs=' + chunkSize + ' skip=' + i +
+          ' count=1 2>/dev/null', 30000);
+        if (ri.errno !== 0) return '';
+        out += ri.stdout;
+      }
+      return out;
+    }
+
     function parsePackageLines(stdout) {
       var out = [];
       (stdout || '').split('\n').forEach(function (line) {
@@ -324,7 +349,7 @@
       try {
         var r = await ksuBridge.exec(PKGINFO_CMD, 60000);
         if (r.errno === 0) {
-          var raw = await ksuBridge.readFile(PKGINFO_OUT);
+          var raw = await readFileChunked(PKGINFO_OUT);
           if (raw && raw.charAt(0) === '[') {
             var arr = JSON.parse(raw);
             appList = arr.map(function (o) {
