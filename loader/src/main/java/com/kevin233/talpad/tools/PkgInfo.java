@@ -67,6 +67,7 @@ public final class PkgInfo {
     private static String dump(String outPath) throws Throwable {
         // app_process 裸进程没有 Context，借 ActivityThread 的系统上下文拿 PackageManager
         Context ctx = systemContext();
+        sSysCtx = ctx;
         PackageManager pm = ctx.getPackageManager();
         List<ApplicationInfo> apps = pm.getInstalledApplications(0);
         Collections.sort(apps, new Comparator<ApplicationInfo>() {
@@ -127,34 +128,31 @@ public final class PkgInfo {
      */
     private static int sIconErrLog = 0;
 
+    private static Context sSysCtx;
+
+    /**
+     * 加载应用图标。裸 app_process 里手搓 AssetManager/Resources 无法完成
+     * drawable 解码（NotFoundException），PackageManager.getApplicationIcon
+     * 又会全部回退默认图标；正确做法是为目标应用创建包上下文
+     * （走正规 ResourcesManager/LoadedApk 资源路径）。
+     */
     private static Drawable loadIconRaw(ApplicationInfo ai) {
         if (ai.icon == 0) return null;
         try {
-            AssetManager am = AssetManager.class.newInstance();
-            Method add = AssetManager.class.getMethod(
-                    "addAssetPath", String.class);
-            add.setAccessible(true);
-            add.invoke(am, ai.sourceDir);
-            if (ai.splitSourceDirs != null) {
-                for (String sp : ai.splitSourceDirs) {
-                    add.invoke(am, sp);
-                }
-            }
-            DisplayMetrics dm = new DisplayMetrics();
-            dm.densityDpi = 480;
-            dm.density = 3.0f;
-            dm.scaledDensity = 3.0f;
-            dm.xdpi = 480;
-            dm.ydpi = 480;
-            dm.widthPixels = 1080;
-            dm.heightPixels = 1920;
-            Resources res = new Resources(am, dm, new Configuration());
-            return res.getDrawable(ai.icon, null);
+            Context appCtx = sSysCtx.createPackageContext(ai.packageName, 0);
+            Drawable d = appCtx.getResources().getDrawable(
+                    ai.icon, appCtx.getTheme());
+            if (d != null) return d;
         } catch (Throwable t) {
             if (sIconErrLog++ < 2) {
-                System.err.println("loadIconRaw failed for " + ai.packageName
-                        + ": " + t);
+                System.err.println("createPackageContext failed for "
+                        + ai.packageName + ": " + t);
             }
+        }
+        // 兜底：系统默认图标
+        try {
+            return sSysCtx.getPackageManager().getApplicationIcon(ai);
+        } catch (Throwable t) {
             return null;
         }
     }
