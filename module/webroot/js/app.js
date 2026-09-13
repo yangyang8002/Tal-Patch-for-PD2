@@ -11,6 +11,12 @@
   var MIRROR_PATH = '/sdcard/TAL-Patch/config.json';
   var LOG_PATH = '/sdcard/TAL-Patch-Log/tal_patch.log';
 
+  // GitHub 仓库与更新检查
+  var GH_REPO = 'yangyang8002/Tal-Patch-for-PD2';
+  var GITHUB_URL = 'https://github.com/' + GH_REPO;
+  var RELEASE_API = 'https://api.github.com/repos/' + GH_REPO + '/releases/latest';
+  var latestReleaseUrl = '';
+
   var DEFAULTS = {
     unlock_install: true,
     block_usercenter_detect: true,
@@ -536,6 +542,93 @@
     }
   }
 
+  // ---------------- GitHub 更新检查 ----------------
+  function normalizeVersion(v) {
+    return String(v || '').replace(/^[vV]/, '').replace(/[-+].*$/, '').trim();
+  }
+
+  /** 版本号比较：a>b 返回 1，a<b 返回 -1，相等返回 0。 */
+  function compareVersion(a, b) {
+    var pa = normalizeVersion(a).split('.');
+    var pb = normalizeVersion(b).split('.');
+    var n = Math.max(pa.length, pb.length);
+    for (var i = 0; i < n; i++) {
+      var x = parseInt(pa[i], 10); if (isNaN(x)) x = 0;
+      var y = parseInt(pb[i], 10); if (isNaN(y)) y = 0;
+      if (x !== y) return x > y ? 1 : -1;
+    }
+    return 0;
+  }
+
+  function setUpdateStatus(text, cls) {
+    var el = $('updateStatus');
+    if (!el) return;
+    el.textContent = text;
+    el.className = 'update-status' + (cls ? ' ' + cls : '');
+  }
+
+  /** 用系统 VIEW Intent 打开外链（WebUI 内 window.open 常被拦截）。 */
+  function openExternal(url) {
+    try {
+      if (window.ksu && typeof window.ksu.openUrl === 'function') {
+        window.ksu.openUrl(url);
+        return;
+      }
+    } catch (e) { /* ignore */ }
+    ksuBridge.exec("am start -a android.intent.action.VIEW -d '" +
+      String(url).replace(/'/g, '') + "'").catch(function () {
+      try { window.open(url, '_blank'); } catch (e2) { /* ignore */ }
+    });
+  }
+
+  async function checkUpdate(manual) {
+    var btn = $('btnCheckUpdate');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '检查中…';
+    }
+    if (manual) setUpdateStatus('检查中…', '');
+    try {
+      var ctl = window.AbortController ? new AbortController() : null;
+      var timer = ctl ? setTimeout(function () { ctl.abort(); }, 12000) : null;
+      var resp = await fetch(RELEASE_API + '?t=' + Date.now(), {
+        cache: 'no-store',
+        signal: ctl ? ctl.signal : undefined,
+        headers: { 'Accept': 'application/vnd.github+json' }
+      });
+      if (timer) clearTimeout(timer);
+      if (resp.status === 404) {
+        setUpdateStatus('仓库暂无 Release', 'muted');
+        return;
+      }
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      var rel = await resp.json();
+      var latest = rel.tag_name || rel.name || '';
+      latestReleaseUrl = rel.html_url || (GITHUB_URL + '/releases');
+      var current = ($('versionText') || {}).textContent || '';
+      if (compareVersion(latest, current) > 0) {
+        setUpdateStatus('发现新版本 ' + latest, 'new');
+        var open = $('btnOpenRelease');
+        if (open) {
+          open.style.display = '';
+          open.textContent = '下载 ' + latest;
+        }
+        ksuBridge.toast('发现新版本 ' + latest);
+      } else {
+        setUpdateStatus('已是最新版本', 'ok');
+        var open2 = $('btnOpenRelease');
+        if (open2) open2.style.display = 'none';
+      }
+    } catch (e) {
+      setUpdateStatus(manual ? ('检查失败：' + (e && e.message ? e.message : e)) : '点击检查更新', 'muted');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = '检查更新';
+      }
+    }
+  }
+
   function bindActions() {
     $('btnRestartSystemUI').onclick = function () {
       doAction('pkill -f com.android.systemui', 'SystemUI 已重启');
@@ -585,6 +678,14 @@
         if (tab) applyTab(tab.getAttribute('data-page'), true);
       });
       $('btnRestartChanged').onclick = restartChangedApps;
+    if ($('btnCheckUpdate')) {
+      $('btnCheckUpdate').onclick = function () { checkUpdate(true); };
+    }
+    if ($('btnOpenRelease')) {
+      $('btnOpenRelease').onclick = function () {
+        openExternal(latestReleaseUrl || (GITHUB_URL + '/releases'));
+      };
+    }
       $('btnDismissScopeBar').onclick = function () {
         changedApps = {};
         updateScopeBar();
@@ -602,7 +703,12 @@
     loadConfig();
     ksuBridge.readFile('/data/adb/modules/tal_patch/module.prop').then(function (raw) {
       var m = raw.match(/^version=(.*)$/m);
-      if (m) $('versionText').textContent = m[1].trim();
+      if (m) {
+        var ver = m[1].trim();
+        $('versionText').textContent = ver;
+        if ($('aboutVersion')) $('aboutVersion').textContent = ver;
+      }
     }).catch(function () {});
+    setTimeout(function () { checkUpdate(false); }, 1200);
   });
 })();

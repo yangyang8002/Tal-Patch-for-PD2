@@ -65,7 +65,7 @@
 # 首次构建自动拉取 LSPlant v6.4 / Dobby / Zygisk API 头文件
 ./gradlew :loader:assembleRelease   # Java → classes.jar
 python build.py                     # CMake 构建 libtalpatch.so + d8 打 dex + 打包
-                                    # → dist/tal_patch-v3.0.0.zip（--skip-native 可跳过 native 构建）
+                                    # → dist/tal_patch-v26.9.1.zip（--skip-native 可跳过 native 构建）
 ```
 
 也可以直接推送 tag，由 GitHub Actions 构建并发布。
@@ -74,7 +74,7 @@ python build.py                     # CMake 构建 libtalpatch.so + d8 打 dex +
 
 1. 设备已刷入 **KernelSU** 并启用 **Zygisk**（推荐 **ZygiskNext**，实测 1.5.0 可用，
    应用进程与 system_server 均正常注入）；
-2. KernelSU 管理器 → 模块 → 刷入 `tal_patch-v3.0.0.zip` → 重启；
+2. KernelSU 管理器 → 模块 → 刷入 `tal_patch-v26.9.1.zip` → 重启；
 3. KernelSU 管理器 → 模块 → TAL-Patch → **WebUI** 进行配置（右上角可切换 MIUIX / Material 主题）；
 4. 配置保存后数秒内热更新生效；涉及「附加作用域」等注入目标的变更需强停目标应用或重启。
 

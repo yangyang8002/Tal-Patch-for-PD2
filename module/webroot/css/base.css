@@ -464,3 +464,31 @@ textarea.input {
   background: var(--accent);
   user-select: none;
 }
+
+/* ---------- 关于页：更新检查 ---------- */
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.update-status {
+  color: var(--text);
+  opacity: .6;
+}
+
+.update-status.ok {
+  color: #34c759;
+  opacity: 1;
+}
+
+.update-status.new {
+  color: var(--accent);
+  opacity: 1;
+  font-weight: 600;
+}
+
+.update-status.muted {
+  opacity: .5;
+}

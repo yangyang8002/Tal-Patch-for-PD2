@@ -31,7 +31,7 @@ DIST_DIR = ROOT / "dist"
 def read_version() -> str:
     prop = (MODULE_DIR / "module.prop").read_text(encoding="utf-8")
     m = re.search(r"^version=(.+)$", prop, re.MULTILINE)
-    return m.group(1).strip() if m else "v3.0.0"
+    return m.group(1).strip() if m else "v26.9.1"
 
 
 def find_classes_jar() -> Path:

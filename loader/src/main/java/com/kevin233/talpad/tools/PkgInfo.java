@@ -9,6 +9,7 @@ import android.content.res.XmlResourceParser;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.drawable.Drawable;
 import android.os.Looper;
 import android.util.Base64;
 import android.util.TypedValue;
@@ -157,7 +158,11 @@ public final class PkgInfo {
             if (tv.string == null) return null;
             String path = tv.string.toString();
             if (path.endsWith(".xml")) {
-                return loadXmlIcon(res, tv.assetCookie, path, depth + 1);
+                // 先按自适应图标规范合成；再退回 createFromXml
+                // （纯 VectorDrawable / shape / color 图标可被完整栅格化）
+                Bitmap composed = loadXmlIcon(res, tv.assetCookie, path, depth + 1);
+                if (composed != null) return composed;
+                return renderXmlDrawable(res, tv.assetCookie, path);
             }
             InputStream is = openNonAsset(res.getAssets(), tv.assetCookie, path);
             if (is == null) return null;
@@ -212,6 +217,24 @@ public final class PkgInfo {
                         0, 0, null);
                 fg.recycle();
             }
+            return out;
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    /** 用 Drawable.createFromXml 栅格化矢量/形状类 XML 图标。 */
+    private static Bitmap renderXmlDrawable(Resources res, int cookie, String path) {
+        try {
+            XmlResourceParser parser = openXml(res.getAssets(), cookie, path);
+            if (parser == null) return null;
+            Drawable d = Drawable.createFromXml(res, parser);
+            parser.close();
+            if (d == null) return null;
+            Bitmap out = Bitmap.createBitmap(ICON_SIZE, ICON_SIZE, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(out);
+            d.setBounds(0, 0, ICON_SIZE, ICON_SIZE);
+            d.draw(canvas);
             return out;
         } catch (Throwable t) {
             return null;
