@@ -310,9 +310,10 @@
       return out;
     }
 
+    var lastScanError = '';
     var PKGINFO_OUT = '/data/adb/modules/tal_patch/cache/apps.json';
     var PKGINFO_CMD = 'rm -f ' + PKGINFO_OUT +
-      '; app_process -Djava.class.path=/data/adb/modules/tal_patch/loader.dex' +
+      '; /system/bin/app_process -Djava.class.path=/data/adb/modules/tal_patch/loader.dex' +
       ' /system/bin com.kevin233.talpad.tools.PkgInfo ' + PKGINFO_OUT;
 
     // 优先用 loader.dex 内置的 PkgInfo 工具导出 图标+应用名，失败回退 pm 纯包名
@@ -324,14 +325,22 @@
         var r = await ksuBridge.exec(PKGINFO_CMD, 60000);
         if (r.errno === 0) {
           var raw = await ksuBridge.readFile(PKGINFO_OUT);
-          var arr = JSON.parse(raw);
-          appList = arr.map(function (o) {
-            return { pkg: o.pkg, label: o.label || o.pkg,
-                     icon: o.icon || null, system: !!o.system };
-          });
-          ok = appList.length > 0;
+          if (raw && raw.charAt(0) === '[') {
+            var arr = JSON.parse(raw);
+            appList = arr.map(function (o) {
+              return { pkg: o.pkg, label: o.label || o.pkg,
+                       icon: o.icon || null, system: !!o.system };
+            });
+            ok = appList.length > 0;
+          } else {
+            lastScanError = '输出文件为空或格式错误';
+          }
+        } else {
+          lastScanError = 'exit=' + r.errno + ' ' +
+            (r.stderr || r.stdout || '').slice(-300);
         }
       } catch (e) {
+        lastScanError = String(e && e.message || e);
         ok = false;
       }
       if (!ok) {
@@ -364,7 +373,12 @@
         $('appListInfo').textContent =
           '共 ' + appList.length + ' 个应用（用户 ' + nu + ' / 系统 ' + (appList.length - nu) + '）';
       } else {
-        $('appListInfo').textContent = '扫描失败';
+        $('appListInfo').textContent = '扫描失败' +
+          (lastScanError ? '：' + lastScanError : '');
+      }
+      if (ok && lastScanError) {
+        $('appListInfo').textContent += '（图标导出失败：' +
+          lastScanError.slice(-120) + '，已回退纯包名）';
       }
       $('btnScanApps').disabled = false;
     }

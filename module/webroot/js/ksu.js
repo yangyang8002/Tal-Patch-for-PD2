@@ -19,7 +19,7 @@
    * @param {string} cmd
    * @returns {Promise<{errno:number, stdout:string, stderr:string}>}
    */
-  function exec(cmd) {
+  function exec(cmd, timeoutMs) {
     return new Promise((resolve, reject) => {
       if (!ksuAvailable()) {
         reject(new Error('KernelSU WebUI API 不可用，请在 KernelSU 管理器中打开本页'));
@@ -29,7 +29,7 @@
       const timer = setTimeout(() => {
         delete global[cbName];
         reject(new Error('命令执行超时'));
-      }, 15000);
+      }, timeoutMs || 15000);
       global[cbName] = function (errno, stdout, stderr) {
         clearTimeout(timer);
         delete global[cbName];
