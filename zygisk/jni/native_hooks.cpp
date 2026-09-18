@@ -43,6 +43,8 @@ static bool is_sensitive_path(const char *path) {
 }
 
 static FILE *fake_fopen(const char *path, const char *mode) {
+    // 防御：hook 未成功时 orig_* 为 nullptr，直接调用会空指针崩溃
+    if (!orig_fopen) return nullptr;
     FILE *f = orig_fopen(path, mode);
     if (f && is_sensitive_path(path)) {
         std::lock_guard<std::mutex> lock(g_mutex);
@@ -68,6 +70,7 @@ static bool should_scrub(const char *line) {
 }
 
 static char *fake_fgets(char *buf, int size, FILE *stream) {
+    if (!orig_fgets) return nullptr;
     // 循环读取直到拿到一行不敏感的数据（敏感行直接吞掉）
     while (true) {
         char *ret = orig_fgets(buf, size, stream);
@@ -81,6 +84,7 @@ static char *fake_fgets(char *buf, int size, FILE *stream) {
 }
 
 static int fake_fclose(FILE *stream) {
+    if (!orig_fclose) return -1;
     {
         std::lock_guard<std::mutex> lock(g_mutex);
         g_scrub_streams.erase(stream);
@@ -100,18 +104,22 @@ void install_native_hooks() {
         return;
     }
     if (DobbyHook(sym_fopen, (dobby_dummy_func_t) &fake_fopen,
-                  (dobby_dummy_func_t *) &orig_fopen) != 0) {
-        LOGW("hook fopen failed");
+                  (dobby_dummy_func_t *) &orig_fopen) != 0 || !orig_fopen) {
+        orig_fopen = nullptr;
+        LOGW("hook fopen failed, skip");
     }
     if (DobbyHook(sym_fgets, (dobby_dummy_func_t) &fake_fgets,
-                  (dobby_dummy_func_t *) &orig_fgets) != 0) {
-        LOGW("hook fgets failed");
+                  (dobby_dummy_func_t *) &orig_fgets) != 0 || !orig_fgets) {
+        orig_fgets = nullptr;
+        LOGW("hook fgets failed, skip");
     }
     if (DobbyHook(sym_fclose, (dobby_dummy_func_t) &fake_fclose,
-                  (dobby_dummy_func_t *) &orig_fclose) != 0) {
-        LOGW("hook fclose failed");
+                  (dobby_dummy_func_t *) &orig_fclose) != 0 || !orig_fclose) {
+        orig_fclose = nullptr;
+        LOGW("hook fclose failed, skip");
     }
-    LOGI("native anti-detect hooks installed");
+    LOGI("native anti-detect hooks installed (fopen=%d fgets=%d fclose=%d)",
+         orig_fopen ? 1 : 0, orig_fgets ? 1 : 0, orig_fclose ? 1 : 0);
 }
 
 } // namespace talpatch

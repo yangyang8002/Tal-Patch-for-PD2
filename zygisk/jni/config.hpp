@@ -23,6 +23,11 @@ bool is_target_process(const char *nice_name, const ModuleConfig &cfg);
 // notify_app_overrides 中的 "pkg":true/false 覆盖默认值）。"pkg:sub" 按 pkg 匹配。
 bool notify_enabled_for(const char *nice_name, const ModuleConfig &cfg);
 
+// 是否需要安装 native 反检测 hook（libc fopen/fgets/fclose 抹除 maps 痕迹）。
+// 仅在会被 TAL 反作弊扫描的进程安装，绝不能装到 system_server / SystemUI /
+// 普通应用进程：inline hook libc 会破坏其文件读取，导致系统与第三方应用异常。
+bool is_native_hook_process(const char *nice_name);
+
 // 读取整个文件（loader.dex / config.json 用），仅可在 root 权限窗口期调用。
 std::vector <uint8_t> read_file(const char *path);
 

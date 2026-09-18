@@ -1,5 +1,19 @@
 # 更新日志
 
+## v26.9.2（重要修复）
+
+### 修复
+- **修复模块导致其他应用无法启动、桌面图标丢失的严重问题**：
+  此前 native 反检测 hook（Dobby inline hook libc `fopen`/`fgets`/`fclose`）
+  被安装到了**所有注入进程**，包括 `system_server`、`SystemUI` 与全部普通
+  应用，破坏其正常文件读取。现收紧为**仅在会被 TAL 反作弊扫描的进程**
+  （学而思自身若干服务进程）安装。
+- native hook 增加空指针与失败防御：`orig_*` 未就绪时不再调用，避免崩溃。
+- `system_server` 彻底不再安装 native hook。
+
+### 建议
+- 从 v26.9.1 升级后请重启一次设备。
+
 ## v26.9.1
 
 首个正式发布版本（Zygisk + KernelSU WebUI 架构）。

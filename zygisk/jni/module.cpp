@@ -54,9 +54,14 @@ public:
         bool notify = !target && talpatch::notify_enabled_for(nice, config_);
         if (target || notify) {
             target_process_ = nice;
+            // native 反检测 hook 只对会被 TAL 扫描 maps 的进程安装。
+            // 装到 SystemUI / system_server / 普通应用会破坏其 fopen/fgets
+            // 文件读取，导致桌面图标丢失、应用无法启动。
+            install_native_ = talpatch::is_native_hook_process(nice);
             dex_ = talpatch::read_file(kLoaderDex);
-            LOGI("%s app process: %s (dex %zu bytes)",
-                 target ? "target" : "notify-only", nice, dex_.size());
+            LOGI("%s app process: %s (dex %zu bytes, native_hooks=%d)",
+                 target ? "target" : "notify-only", nice, dex_.size(),
+                 install_native_ ? 1 : 0);
         } else {
             api_->setOption(zygisk::Option::DLCLOSE_MODULE_LIBRARY);
         }
@@ -67,7 +72,9 @@ public:
         if (target_process_.empty()) {
             return;
         }
-        talpatch::install_native_hooks();
+        if (install_native_) {
+            talpatch::install_native_hooks();
+        }
         talpatch::inject_loader(env_, target_process_.c_str(),
                                 config_.raw_json, std::move(dex_));
         dex_.clear();
@@ -87,7 +94,7 @@ public:
         if (!inject_server_) {
             return;
         }
-        talpatch::install_native_hooks();
+        // system_server 绝不安装 native hook：inline hook libc 会破坏系统服务
         talpatch::inject_loader(env_, "system_server",
                                 config_.raw_json, std::move(dex_));
         dex_.clear();
@@ -100,6 +107,7 @@ private:
     std::string target_process_;
     std::vector<uint8_t> dex_;
     bool inject_server_ = false;
+    bool install_native_ = false;
 };
 
 } // namespace

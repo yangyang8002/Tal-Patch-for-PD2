@@ -24,6 +24,20 @@ static const char *kBuiltinScopes[] = {
         "com.tal.pad.znxxservice",
 };
 
+// native 反检测 hook 的适用进程：TAL 自身（含其子进程）。
+// 这些进程才会扫描 /proc/self/maps 做注入检测，其他进程包括 SystemUI、
+// system_server 与普通应用都不需要，安装后反而会破坏其正常文件读取。
+static const char *kNativeHookScopes[] = {
+        "com.tal.pad.studyservice",
+        "com.tal.dataupload",
+        "com.tal.pad.backdoor",
+        "com.tal.backdoor",
+        "com.tal.pad.onlineclass",
+        "com.tal.pad.usercenter",
+        "com.tal.pad.minor_protect",
+        "com.tal.pad.znxxservice",
+};
+
 std::vector<uint8_t> read_file(const char *path) {
     std::vector<uint8_t> out;
     FILE *f = fopen(path, "rb");
@@ -157,6 +171,14 @@ bool is_target_process(const char *nice_name, const ModuleConfig &cfg) {
     }
     for (const auto &entry : cfg.extra_scopes) {
         if (name_matches(nice_name, entry.c_str())) return true;
+    }
+    return false;
+}
+
+bool is_native_hook_process(const char *nice_name) {
+    if (!nice_name) return false;
+    for (const char *entry : kNativeHookScopes) {
+        if (name_matches(nice_name, entry)) return true;
     }
     return false;
 }
