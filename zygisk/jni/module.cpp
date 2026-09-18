@@ -49,9 +49,10 @@ public:
         }
         const char *nice = env_->GetStringUTFChars(args->nice_name, nullptr);
         config_ = talpatch::load_module_config();
-        bool target = talpatch::is_target_process(nice, config_);
+        bool excluded = talpatch::is_excluded_process(nice);
+        bool target = !excluded && talpatch::is_target_process(nice, config_);
         // 非目标进程：若"应用消息通知"对该包生效，也注入（仅安装通知 hook）
-        bool notify = !target && talpatch::notify_enabled_for(nice, config_);
+        bool notify = !excluded && !target && talpatch::notify_enabled_for(nice, config_);
         if (target || notify) {
             target_process_ = nice;
             // native 反检测 hook 只对会被 TAL 扫描 maps 的进程安装。
@@ -63,6 +64,9 @@ public:
                  target ? "target" : "notify-only", nice, dex_.size(),
                  install_native_ ? 1 : 0);
         } else {
+            if (excluded) {
+                LOGI("skip restricted process: %s", nice);
+            }
             api_->setOption(zygisk::Option::DLCLOSE_MODULE_LIBRARY);
         }
         env_->ReleaseStringUTFChars(args->nice_name, nice);

@@ -1,7 +1,7 @@
 id=tal_patch
 name=TAL-Patch (Zygisk + WebUI)
-version=v26.9.2
-versionCode=260902
+version=v26.9.3
+versionCode=260903
 author=Kevin233 (github.com/Kevin233B) & yangyang8002 (github.com/yangyang8002)
 description=学而思学习机解封补丁：解除安装限制、恢复通知内容、自定义学习/应用使用时长、屏蔽环境检测与 Root 痕迹、禁用未成年人精细化管控。Zygisk 注入 + KernelSU WebUI 配置。
 updateJson=https://raw.githubusercontent.com/yangyang8002/Tal-Patch-for-PD2/zygisk-webui/update.json

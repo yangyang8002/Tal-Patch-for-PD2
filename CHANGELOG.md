@@ -1,5 +1,15 @@
 # 更新日志
 
+## v26.9.3
+
+### 修复
+- **修复 Momo（Mahoshojo）等检测类应用"服务无响应"**：模块默认全量注入时
+  会把应用的 `_zygote` 隔离进程（SELinux 域 `app_zygote`）也注入。该域无权
+  访问 servicemanager binder，注入代码反复尝试 binder 调用被 SELinux 拒绝，
+  导致隔离检测进程卡死，主界面一直转圈。
+- 注入时排除 `*_zygote` 与 `:sandboxed_process` 等受限进程。
+
+
 ## v26.9.2（重要修复）
 
 ### 修复

@@ -175,6 +175,23 @@ bool is_target_process(const char *nice_name, const ModuleConfig &cfg) {
     return false;
 }
 
+// 受限/隔离进程不应注入：app_zygote 的 SELinux 域无权访问 servicemanager
+// binder，注入的 Java 代码一旦尝试 binder 调用就会被拒绝，导致 Momo 等检测
+// 应用的隔离进程卡死、主界面一直等待（"服务无响应"）。
+bool is_excluded_process(const char *nice_name) {
+    if (!nice_name) return true;
+    std::string n(nice_name);
+    static const char *kSuffix = "_zygote";
+    const size_t sl = strlen(kSuffix);
+    if (n.size() > sl && n.compare(n.size() - sl, sl, kSuffix) == 0) {
+        return true;
+    }
+    if (n.find(":sandboxed_process") != std::string::npos) {
+        return true;
+    }
+    return false;
+}
+
 bool is_native_hook_process(const char *nice_name) {
     if (!nice_name) return false;
     for (const char *entry : kNativeHookScopes) {
