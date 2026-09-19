@@ -1,5 +1,17 @@
 # 更新日志
 
+## v26.9.4
+
+### 新增
+- **设备信息伪装（QQ / TIM）**：借鉴 TCQT 的 CustomDevice 思路，在 QQ / TIM
+  进程内 hook `SystemProperties#get` 与腾讯 `DeviceInfoMonitor#getModel`，
+  把 `ro.product.device/model/manufacturer` 伪装成正常手机指纹，规避因学习机
+  设备信息（alps / TALIH-PD2 / ls12_mt8797_wifi_64）被腾讯判定为风险设备。
+  - WebUI「高级」页新增开关与设备代号/型号/制造商三项配置
+  - 默认示例：device=ingres、model=21121210C、manufacturer=Xiaomi
+  - 注意：需先把 QQ 移出 ZygiskNext 排除列表，否则模块无法注入 QQ
+
+
 ## v26.9.3
 
 ### 修复

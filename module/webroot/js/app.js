@@ -33,7 +33,11 @@
     scope_extra: '',
     ui_theme: 'miuix',
     notify_all_enabled: true,
-    notify_app_overrides: {}
+    notify_app_overrides: {},
+    device_spoof_enabled: false,
+    device_spoof_device: 'ingres',
+    device_spoof_model: '21121210C',
+    device_spoof_manufacturer: 'Xiaomi'
   };
 
   var TAL_PACKAGES = [
@@ -75,7 +79,16 @@
     { section: '高级', page: 'advanced' },
     { key: 'scope_extra', type: 'text', title: '附加作用域',
       desc: '附加注入的应用包名，逗号分隔（这些应用只恢复通知，需重启目标应用）',
-      hint: '例如：com.tencent.mm, com.microsoft.emmx' }
+      hint: '例如：com.tencent.mm, com.microsoft.emmx' },
+    { section: '设备信息伪装（QQ / TIM）', page: 'advanced' },
+    { key: 'device_spoof_enabled', type: 'switch', title: '启用设备信息伪装',
+      desc: '在 QQ / TIM 进程内伪装设备指纹，规避腾讯风控（借鉴 TCQT CustomDevice）。需先把 QQ 移出 ZygiskNext 排除列表，并重启 QQ' },
+    { key: 'device_spoof_device', type: 'text', title: '设备代号（ro.product.device）',
+      hint: '例如：ingres' },
+    { key: 'device_spoof_model', type: 'text', title: '设备型号（ro.product.model）',
+      hint: '例如：21121210C' },
+    { key: 'device_spoof_manufacturer', type: 'text', title: '设备制造商（ro.product.manufacturer）',
+      hint: '例如：Xiaomi' }
   ];
 
   var config = {};

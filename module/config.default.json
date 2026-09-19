@@ -14,5 +14,9 @@
   "scope_extra": "",
   "ui_theme": "miuix",
   "notify_all_enabled": true,
-  "notify_app_overrides": {}
+  "notify_app_overrides": {},
+  "device_spoof_enabled": false,
+  "device_spoof_device": "ingres",
+  "device_spoof_model": "21121210C",
+  "device_spoof_manufacturer": "Xiaomi"
 }

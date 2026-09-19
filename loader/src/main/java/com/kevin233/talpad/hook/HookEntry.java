@@ -42,6 +42,11 @@ public final class HookEntry {
                     "com.tal.pad.usercenter",
                     "com.tal.pad.minor_protect",
                     "com.tal.pad.znxxservice"));
+    /** 设备信息伪装只作用于 QQ / TIM。 */
+    private static final java.util.Set<String> DEVICE_SPOOF_PACKAGES =
+            new java.util.HashSet<>(java.util.Arrays.asList(
+                    "com.tencent.mobileqq",
+                    "com.tencent.tim"));
     private static final String PACKAGE_INSTALLER_AOSP = "com.android.packageinstaller";
     private static final List<String> ALWAYS_ALLOWED = new AbstractList<String>() {
         @Override
@@ -104,6 +109,7 @@ public final class HookEntry {
             return;
         }
         installHooks(pkg);
+        installDeviceSpoofHooks(pkg);
         if (TAL_APP_PACKAGES.contains(pkg)) {
             awaitAppClassLoader(pkg);
         }
@@ -512,6 +518,75 @@ public final class HookEntry {
             throw e;
         }
     }
+    // ------------------------------------------------------------------
+    // 设备信息伪装（借鉴 TCQT / CustomDevice）
+    // 仅作用于 QQ / TIM，在宿主进程内 hook：
+    //   android.os.SystemProperties#get(String[,String]) -> ro.product.device/model/manufacturer
+    //   com.tencent.qmethod.pandoraex.monitor.DeviceInfoMonitor#getModel
+    // 让腾讯风控读到正常手机指纹，而不是学习机的 alps / TALIH-PD2。
+    // ------------------------------------------------------------------
+    private void installDeviceSpoofHooks(String pkg) {
+        if (!DEVICE_SPOOF_PACKAGES.contains(pkg)) return;
+        Prefs prefs = ConfigBridge.get();
+        if (prefs == null
+                || !prefs.getBoolean(Config.KEY_DEVICE_SPOOF_ENABLED,
+                        Config.DEFAULT_DEVICE_SPOOF_ENABLED)) {
+            return;
+        }
+        final String spoofDevice = fallback(
+                prefs.getString(Config.KEY_DEVICE_SPOOF_DEVICE, ""),
+                Config.DEFAULT_DEVICE_SPOOF_DEVICE);
+        final String spoofModel = fallback(
+                prefs.getString(Config.KEY_DEVICE_SPOOF_MODEL, ""),
+                Config.DEFAULT_DEVICE_SPOOF_MODEL);
+        final String spoofManufacturer = fallback(
+                prefs.getString(Config.KEY_DEVICE_SPOOF_MANUFACTURER, ""),
+                Config.DEFAULT_DEVICE_SPOOF_MANUFACTURER);
+        try {
+            Class<?> sysProps = Class.forName("android.os.SystemProperties");
+            hookMethodByName(sysProps, "get", 1, chain -> {
+                String key = (String) chain.getArg(0);
+                String replaced = spoofProp(key, spoofDevice, spoofModel, spoofManufacturer);
+                return replaced != null ? replaced : chain.proceed();
+            });
+            hookMethodByName(sysProps, "get", 2, chain -> {
+                String key = (String) chain.getArg(0);
+                String replaced = spoofProp(key, spoofDevice, spoofModel, spoofManufacturer);
+                return replaced != null ? replaced : chain.proceed();
+            });
+            log(Log.INFO, TAG, "device spoof: SystemProperties hooks installed ("
+                    + spoofDevice + "/" + spoofModel + "/" + spoofManufacturer + ")");
+        } catch (Throwable t) {
+            log(Log.WARN, TAG, "device spoof: hook SystemProperties failed", t);
+        }
+        try {
+            Class<?> monitor = Class.forName(
+                    "com.tencent.qmethod.pandoraex.monitor.DeviceInfoMonitor");
+            hookMethodByName(monitor, "getModel", 0, chain -> spoofModel);
+            log(Log.INFO, TAG, "device spoof: DeviceInfoMonitor#getModel hooked");
+        } catch (Throwable t) {
+            log(Log.WARN, TAG, "device spoof: DeviceInfoMonitor unavailable: " + t);
+        }
+    }
+
+    private static String fallback(String value, String def) {
+        return (value == null || value.trim().isEmpty()) ? def : value.trim();
+    }
+
+    private static String spoofProp(String key, String device, String model, String manufacturer) {
+        if (key == null) return null;
+        switch (key) {
+            case "ro.product.device":
+                return device;
+            case "ro.product.model":
+                return model;
+            case "ro.product.manufacturer":
+                return manufacturer;
+            default:
+                return null;
+        }
+    }
+
     private synchronized void installHooks(String pkg) {
         if (hooksInstalled) {
             return;

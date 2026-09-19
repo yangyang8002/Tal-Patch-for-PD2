@@ -28,6 +28,11 @@ public final class Config {
     /** 应用粒度通知覆盖表：JSON 字符串，如 {"com.xxx":false} */
     public static final String KEY_NOTIFY_APP_OVERRIDES = "notify_app_overrides";
     public static final String KEY_SCOPE_EXTRA = "scope_extra";
+    /** 设备信息伪装（仅 QQ / TIM 进程生效，借鉴 TCQT 的 CustomDevice 思路）。 */
+    public static final String KEY_DEVICE_SPOOF_ENABLED = "device_spoof_enabled";
+    public static final String KEY_DEVICE_SPOOF_DEVICE = "device_spoof_device";
+    public static final String KEY_DEVICE_SPOOF_MODEL = "device_spoof_model";
+    public static final String KEY_DEVICE_SPOOF_MANUFACTURER = "device_spoof_manufacturer";
     /** WebUI 主题：miuix / material（仅 WebUI 使用，Hook 侧不读）。 */
     public static final String KEY_UI_THEME = "ui_theme";
     public static final boolean DEFAULT_RESTORE_NOTIFICATION = true;
@@ -47,6 +52,10 @@ public final class Config {
     public static final boolean DEFAULT_NOTIFY_ALL_ENABLED = true;
     public static final String DEFAULT_NOTIFY_APP_OVERRIDES = "{}";
     public static final String DEFAULT_SCOPE_EXTRA = "";
+    public static final boolean DEFAULT_DEVICE_SPOOF_ENABLED = false;
+    public static final String DEFAULT_DEVICE_SPOOF_DEVICE = "ingres";
+    public static final String DEFAULT_DEVICE_SPOOF_MODEL = "21121210C";
+    public static final String DEFAULT_DEVICE_SPOOF_MANUFACTURER = "Xiaomi";
     public static final String DEFAULT_UI_THEME = "miuix";
     private Config() {
     }
